@@ -1,0 +1,31 @@
+import { ModuleWithProviders } from '@angular/core';
+import * as i0 from "@angular/core";
+import * as i1 from "./lib-presciption.component";
+import * as i2 from "@angular/router";
+import * as i3 from "@angular/common";
+import * as i4 from "ngx-toastr";
+import * as i5 from "ngx-permissions";
+import * as i6 from "@angular/material/paginator";
+import * as i7 from "@angular/material/tooltip";
+import * as i8 from "@angular/material/input";
+import * as i9 from "@angular/material/form-field";
+import * as i10 from "@angular/material/expansion";
+import * as i11 from "@angular/material/bottom-sheet";
+import * as i12 from "@angular/material/snack-bar";
+import * as i13 from "@angular/material/menu";
+import * as i14 from "@angular/material/table";
+import * as i15 from "@angular/material/icon";
+import * as i16 from "@angular/material/sidenav";
+import * as i17 from "@angular/material/tabs";
+import * as i18 from "@angular/cdk/accordion";
+import * as i19 from "@angular/material/dialog";
+import * as i20 from "@angular/material/datepicker";
+import * as i21 from "@angular/material/core";
+import * as i22 from "@angular/forms";
+import * as i23 from "@ngx-translate/core";
+export declare class LibPresciptionModule {
+    static forRoot(env: any): ModuleWithProviders<LibPresciptionModule>;
+    static ɵfac: i0.ɵɵFactoryDeclaration<LibPresciptionModule, never>;
+    static ɵmod: i0.ɵɵNgModuleDeclaration<LibPresciptionModule, never, [typeof i1.LibPresciptionComponent, typeof i2.RouterModule, typeof i3.CommonModule, typeof i4.ToastrModule, typeof i5.NgxPermissionsModule, typeof i6.MatPaginatorModule, typeof i7.MatTooltipModule, typeof i8.MatInputModule, typeof i9.MatFormFieldModule, typeof i10.MatExpansionModule, typeof i11.MatBottomSheetModule, typeof i12.MatSnackBarModule, typeof i13.MatMenuModule, typeof i14.MatTableModule, typeof i15.MatIconModule, typeof i16.MatSidenavModule, typeof i17.MatTabsModule, typeof i18.CdkAccordionModule, typeof i19.MatDialogModule, typeof i20.MatDatepickerModule, typeof i21.MatNativeDateModule, typeof i22.FormsModule, typeof i22.ReactiveFormsModule], [typeof i1.LibPresciptionComponent, typeof i6.MatPaginatorModule, typeof i7.MatTooltipModule, typeof i8.MatInputModule, typeof i9.MatFormFieldModule, typeof i10.MatExpansionModule, typeof i11.MatBottomSheetModule, typeof i12.MatSnackBarModule, typeof i13.MatMenuModule, typeof i14.MatTableModule, typeof i15.MatIconModule, typeof i16.MatSidenavModule, typeof i17.MatTabsModule, typeof i18.CdkAccordionModule, typeof i19.MatDialogModule, typeof i20.MatDatepickerModule, typeof i21.MatNativeDateModule, typeof i22.FormsModule, typeof i22.ReactiveFormsModule, typeof i5.NgxPermissionsModule, typeof i4.ToastrModule, typeof i23.TranslateModule]>;
+    static ɵinj: i0.ɵɵInjectorDeclaration<LibPresciptionModule>;
+}
