@@ -7,7 +7,7 @@ import { ProfileService } from '../lib/services/profile.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { DiagnosisModel, EncounterModel, EncounterProviderModel, FollowUpDataModel, MedicineModel, ObsApiResponseModel, ObsModel, PatientIdentifierModel, PatientModel, PatientRegistrationFieldsModel, PatientVisitSection, PersonAttributeModel, ProviderAttributeModel, ReferralModel, TestModel, VisitAttributeModel, VisitModel, VitalModel } from './model/model';
+import { DiagnosisModel, EncounterModel, EncounterProviderModel, FollowUpDataModel, MedicineModel, ObsApiResponseModel, ObsModel, PatientHistoryModel, PatientIdentifierModel, PatientModel, PatientRegistrationFieldsModel, PatientVisitSection, PersonAttributeModel, ProviderAttributeModel, ReferralModel, TestModel, VisitAttributeModel, VisitModel, VitalModel } from './model/model';
 import { checkIsEnabled, VISIT_SECTIONS } from './utils/visit-sections';
 import { TranslateService,TranslateModule } from '@ngx-translate/core';
 import moment from 'moment';
@@ -34,7 +34,8 @@ import { DefaultImageDirective } from './directives/default-image.directive';
     TranslateModule,
     MatTabsModule ,
     MatTableModule ,
-    DefaultImageDirective
+    DefaultImageDirective,
+    MatDialogModule
    ],
   templateUrl: './lib-prescription.component.html',
   styleUrls: ['./lib-prescription.component.scss'],
@@ -103,7 +104,7 @@ export class LibPresciptionComponent implements OnInit,OnDestroy {
   constructor(
      @Inject(MAT_DIALOG_DATA) public data:any,
       private dialogRef: MatDialogRef<LibPresciptionComponent>,
-      private appConfigService: AppConfigService,
+      public appConfigService: AppConfigService,
       private translateService: TranslateService,
       private visitService: VisitService,
       private diagnosisService: DiagnosisService,
@@ -191,6 +192,7 @@ ngOnInit(): void {
                 this.checkIfReferralPresent();
                 this.checkIfFollowUpPresent();
                 this.checkIfFollowUpInstructionsPresent();
+                this.checkIfDiscussionSummaryPresent();
               }
               this.getCheckUpReason(visit.encounters);
               this.getVitalObs(visit.encounters);
@@ -216,8 +218,6 @@ ngOnInit(): void {
             }
           });
         }
-      }, (error) => {
-  
       });
     }
   /**
@@ -226,24 +226,55 @@ ngOnInit(): void {
    * @return {void}
    */
    getCheckUpReason(encounters: EncounterModel[]) {
-     this.cheifComplaints = [];
-     encounters.forEach((enc: EncounterModel) => {
-       if (enc.encounterType.display === visitTypes.ADULTINITIAL) {
-         enc.obs.forEach((obs: ObsModel) => {
-           if (obs.concept.display === visitTypes.CURRENT_COMPLAINT) {
-             const currentComplaint =  this.visitService.getData(obs)?.value.replace(new RegExp('►', 'g'), '').split('<b>');
-             for (let i = 0; i < currentComplaint.length; i++) {
-               if (currentComplaint[i] && currentComplaint[i].length > 1) {
-                 const obs1 = currentComplaint[i].split('<');
-                 if (!obs1[0].match(visitTypes.ASSOCIATED_SYMPTOMS)) {
-                   this.cheifComplaints.push(obs1[0]);
-                 }
-               }
-             }
-           }
-         });
-       }
-     });
+      this.cheifComplaints = [];
+      this.checkUpReasonData = [];
+      encounters.forEach((enc: EncounterModel) => {
+        if (enc.encounterType.display === visitTypes.ADULTINITIAL) {
+          enc.obs.forEach((obs: ObsModel) => {
+            if (obs.concept.display === visitTypes.CURRENT_COMPLAINT) {
+              const currentComplaint = this.visitService.getData(obs)?.value.split('<b>');
+              for (let i = 0; i < currentComplaint.length; i++) {
+                if (currentComplaint[i] && currentComplaint[i].length > 1) {
+                  const obs1 = currentComplaint[i].split('<');
+                  if (!obs1[0].match(visitTypes.ASSOCIATED_SYMPTOMS)) {
+                    this.cheifComplaints.push(obs1[0]);
+                  }
+                  const splitByBr = currentComplaint[i].split('<br/>');
+                  if (splitByBr[0].includes(visitTypes.ASSOCIATED_SYMPTOMS)) {
+                    const obj1: PatientHistoryModel = {};
+                    obj1.title = this.translateService.instant(visitTypes.ASSOCIATED_SYMPTOMS);
+                    obj1.data = [];
+                    for (let j = 1; j < splitByBr.length; j = j + 2) {
+                      if (splitByBr[j].trim() && splitByBr[j].trim().length > 1) {
+                        obj1.data.push({ key: splitByBr[j].replace('• ', '').replace(' -', ''), value: splitByBr[j + 1] });
+                      }
+                    }
+                    this.checkUpReasonData.push(obj1);
+                  } else {
+                    const obj1: PatientHistoryModel = {};
+                    obj1.title = splitByBr[0].replace('</b>:', '');
+                    obj1.data = [];
+                    for (let k = 1; k < splitByBr.length; k++) {
+                      if (splitByBr[k].trim() && splitByBr[k].trim().length > 1) {
+                        const splitByDash = splitByBr[k].split('-');
+                        const processedStrings = splitByDash?.slice(1, splitByDash.length).join('-').split(".").map(itemList => {
+                          let splitByHyphen = itemList.split(" - ");
+                          let value = splitByHyphen.pop() || "";
+                          splitByHyphen.push(value);
+                          return splitByHyphen.join(" - ");
+                        });
+                        const resultString = processedStrings.join(". ");
+                        obj1.data.push({ key: splitByDash[0].replace('• ', ''), value: resultString });
+                      }
+                    }
+                    this.checkUpReasonData.push(obj1);
+                  }
+                }
+              }
+            }
+          });
+        }
+      });
    }
  
    /**
@@ -278,7 +309,9 @@ ngOnInit(): void {
    */
    checkIfDiagnosisPresent() {
     this.existingDiagnosis = [];
-    this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, conceptIds.conceptDiagnosis).subscribe((response: ObsApiResponseModel) => {
+    this.diagnosisService.getObs(this.baseUrl, this.visit.patient.uuid, conceptIds.conceptDiagnosis).subscribe((response: ObsApiResponseModel) => {
+      console.log(response, "response>>>>>>>>>>>");
+      
       response.results.forEach((obs: ObsModel) => {
         if (obs.encounter.visit.uuid === this.visit.uuid) {
           if(this.appConfigService.patient_visit_summary?.dp_dignosis_secondary){
@@ -318,6 +351,8 @@ ngOnInit(): void {
   checkIfDiscussionSummaryPresent() {
     this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, this.conceptDiscussionSummary).subscribe((response: ObsApiResponseModel) => {
       response.results.forEach((obs: ObsModel) => {
+        console.log(obs, "BJC");
+        
         if (obs.encounter.visit.uuid === this.visit.uuid) {
           this.discussionSummary = obs.value
         }
@@ -392,15 +427,19 @@ ngOnInit(): void {
    */
    checkIfReferralPresent() {
      this.referrals = [];
-     this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, this.conceptReferral)
-       .subscribe((response: ObsApiResponseModel) => {
-         response.results.forEach((obs: ObsModel) => {
-           const obs_values = obs.value.split(':');
-           if (obs.encounter && obs.encounter.visit.uuid === this.visit.uuid) {
-             this.referrals.push({ uuid: obs.uuid, speciality: obs_values[0].trim(), facility: obs_values[1]?.trim(), priority: obs_values[2]?.trim(), reason: obs_values[3]?.trim()? obs_values[3].trim():'-' });
-           }
-         });
-       });
+    this.diagnosisService.getObs(this.baseUrl, this.visit.patient.uuid, conceptIds.conceptReferral)
+      .subscribe((response: ObsApiResponseModel) => {
+        response.results.forEach((obs: ObsModel) => {
+          if (obs.encounter && obs.encounter.visit.uuid === this.visit.uuid) {
+            if(this.appConfigService.patient_visit_summary?.dp_referral_secondary)
+              this.referralSecondary = obs.value
+            else if(obs.value.includes(":")) {
+              const obs_values = obs.value.split(':');
+              this.referrals.push({ uuid: obs.uuid, speciality: obs_values[0].trim(), facility: obs_values[1].trim(), priority: obs_values[2].trim(), reason: obs_values[3].trim()? obs_values[3].trim():'-' });
+            }
+          }
+        });
+      });
    }
  
    /**
@@ -738,518 +777,532 @@ ngOnInit(): void {
    * @return {Promise} - Promise containing base64 image
    */
 
-  async toObjectUrl(url: string): Promise<string | null> {
-    try {
-      const response = await fetch(url, { mode: 'cors' });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`);
-      }
-      const blob = await response.blob();
-      if (!blob.type.startsWith('image/')) {
-        throw new Error('Fetched resource is not an image');
-      }
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('Failed to read image'));
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.error('Error fetching or processing image:', error);
-      return null;
-    }
-  }
-  
- 
-   ngOnDestroy() {
-     this.eventsSubscription?.unsubscribe();
-   }
- 
-   /**
-   * Get vital value for a given vital uuid
-   * @param {string} uuid - Vital uuid
-   * @return {any} - Obs value
-   */
-   getObsValue(uuid: string, key?: string): any {
-     const v = this.vitalObs.find(e => e.concept.uuid === uuid);
-     const value = v?.value ? ( typeof v.value == 'object') ? v.value?.display : v.value : null;
-     if(!value && key === 'bmi') {
-      return calculateBMI(this.vitals, this.vitalObs);
-     }
-     return value
-   }
- 
-   checkPatientRegField(fieldName: string): boolean{
-     return this.patientRegFields.indexOf(fieldName) !== -1;
-   }
+  // async toObjectUrl(url: string): Promise<string | null> {
+  //   try {
+  //     const response = await fetch(url, { mode: 'cors' });
+  //     if (!response.ok) {
+  //       throw new Error(`Failed to fetch image: ${response.statusText}`);
+  //     }
+  //     const blob = await response.blob();
+  //     if (!blob.type.startsWith('image/')) {
+  //       throw new Error('Fetched resource is not an image');
+  //     }
+  //     return new Promise((resolve, reject) => {
+  //       const reader = new FileReader();
+  //       reader.onloadend = () => resolve(reader.result as string);
+  //       reader.onerror = () => reject(new Error('Failed to read image'));
+  //       reader.readAsDataURL(blob);
+  //     });
+  //   } catch (error) {
+  //     console.error('Error fetching or processing image:', error);
+  //     return null;
+  //   }
+  // }
 
-   get shouldShowProfilePhoto(): boolean {
+  toObjectUrl(url: string) {
+    return fetch(url)
+        .then((response) => {
+          return response.blob();
+        })
+        .then(blob => {
+          return new Promise((resolve, _) => {
+              if (!blob) { resolve(''); }
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(blob);
+          });
+        });
+  }
+ 
+  ngOnDestroy() {
+    this.eventsSubscription?.unsubscribe();
+  }
+ 
+  /**
+ * Get vital value for a given vital uuid
+ * @param {string} uuid - Vital uuid
+ * @return {any} - Obs value
+ */
+  getObsValue(uuid: string, key?: string): any {
+    const v = this.vitalObs.find(e => e.concept.uuid === uuid);
+    const value = v?.value ? ( typeof v.value == 'object') ? v.value?.display : v.value : null;
+    if(!value && key === 'bmi') {
+    return calculateBMI(this.vitals, this.vitalObs);
+    }
+    return value
+  }
+ 
+  checkPatientRegField(fieldName: string): boolean{
+    return this.patientRegFields.indexOf(fieldName) !== -1;
+  }
+
+  get shouldShowProfilePhoto(): boolean {
     return this.checkPatientRegField('Profile Photo') && Boolean(this.patient?.person?.uuid);
   }
   
-   getPersonalInfo() {
-     const data = {
-       colSpan: 4,
-       layout: 'noBorders',
-       table: {
-         widths: ['*','*','*','*'],
-         body: [
-           [
-             {
-               colSpan: 4,
-               text: `Personal Information`,
-               style: 'subheader'
-             },
-             '',
-             '',
-             ''
-           ]
-         ]
-       }
-     };
- 
-     let other = [];
-     this.appConfigService.patient_registration['personal'].forEach((e: PatientRegistrationFieldsModel) => {
-       let value: any;
-       switch (e.name) {
-         case 'Gender':
-           value = this.patient?.person.gender == 'M' ? 'Male' : 'Female';
-           break;
-         case 'Age':
-           value = this.patient?.person.age + ' years';
-           break;
-         case 'Date of Birth':
-           value = new Date(this.patient?.person.birthdate).toDateString();
-           break;
-         case 'Phone Number':
-           value = this.getPersonAttributeValue('Telephone Number');
-           break;
-         case 'Guardian Type':
-           value = this.getPersonAttributeValue('Guardian Type');
-           break;
-         case 'Guardian Name':
-           value = this.getPersonAttributeValue('Guardian Name');
-           break;
-         case 'Emergency Contact Name':
-           value = this.getPersonAttributeValue('Emergency Contact Name');
-           break;
-         case 'Emergency Contact Number':
-           value = this.getPersonAttributeValue('Emergency Contact Number');
-           break;
-         case 'Contact Type':
-           value = this.getPersonAttributeValue('Contact Type');
-           break;
-         case 'Email':
-           value = this.getPersonAttributeValue('Email');
-           break;
-         default:
-           break;
-       }
-       if (value !== 'NA' && value) {
-         other.push({
-           stack: [
-             { text: e.name, style: 'subsubheader' },
-             { text: value, style: 'pval' }
-           ]
-         });
-       }
-     });
-     const chunkSize = 4;
-     for (let i = 0; i < other.length; i += chunkSize) {
-       const chunk = other.slice(i, i + chunkSize);
-       if (chunk.length == chunkSize) {
-         data.table.body.push([...chunk]);
-       } else {
-         for (let x = chunk.length; x < chunkSize; x++) {
-           chunk[x] = '';
-         }
-         data.table.body.push([...chunk]);
-       }
-     }
- 
-     return data;
-   }
- 
-   getAddress() {
-     const data = {
-       colSpan: 4,
-       layout: 'noBorders',
-       table: {
-         widths: ['*','*','*','*'],
-         body: []
-       }
-     };
-     if (this.hasPatientAddressEnabled) {
-       data.table.body.push([
-         {
-           colSpan: 4,
-           text: `Address`,
-           style: 'subheader'
-         },
-         '',
-         '',
-         ''
-       ]);
-       let other = [];
-       this.appConfigService.patient_registration['address'].forEach((e: PatientRegistrationFieldsModel) => {
-         let value: any;
-         switch (e.name) {
-           case 'Household Number':
-             value = this.patient?.person?.preferredAddress?.address6;
-             break;
-           case 'Corresponding Address 1':
-             value = this.patient?.person?.preferredAddress?.address1;
-             break;
-           case 'Corresponding Address 2':
-             value = this.patient?.person?.preferredAddress?.address2;
-             break;
-           case 'Block':
-             value = this.patient?.person?.preferredAddress?.address3;
-             break;
-           case 'Village/Town/City':
-             value = this.patient?.person.preferredAddress?.cityVillage;
-             break;
-           case 'District':
-             value = this.patient?.person.preferredAddress?.countyDistrict;
-             break;
-           case 'State':
-             value = this.patient?.person.preferredAddress?.stateProvince;
-             break;
-           case 'Country':
-             value = this.patient?.person.preferredAddress?.country;
-             break;
-           case 'Postal Code':
-             value = this.patient?.person.preferredAddress?.postalCode;
-             break;
-           default:
-             break;
-         }
-         if (value) {
-           other.push({ 
-             stack: [
-               { text: e.name, style: 'subsubheader' },
-               { text: value, style: 'pval' }
-             ] 
-           });
-         }
-       });
-       const chunkSize = 4;
-       for (let i = 0; i < other.length; i += chunkSize) {
-           const chunk = other.slice(i, i + chunkSize);
-           if (chunk.length == chunkSize) {
-             data.table.body.push([...chunk]);
-           } else {
-             for (let x = chunk.length; x < chunkSize; x++) {
-               chunk[x] = '';
-             }
-             data.table.body.push([...chunk]);
-           }
-       }
-     } else {
-       data.table.body.push(['','','','']);
-     }
-     return data;
-   }
- 
-   getOtherInfo() {
-     const data = {
-       colSpan: 4,
-       layout: 'noBorders',
-       table: {
-         widths: ['*','*','*','*'],
-         body: []
-       }
-     };
-     if (this.hasPatientOtherEnabled) {
-       data.table.body.push([
-         {
-           colSpan: 4,
-           text: `Other Information`,
-           style: 'subheader'
-         },
-         '',
-         '',
-         ''
-       ]);
-       let other = [];
-       this.appConfigService.patient_registration['other'].forEach((e: PatientRegistrationFieldsModel) => {
-         let value: any;
-         switch (e.name) {
-           case 'Occupation':
-             value = this.getPersonAttributeValue('occupation');
-             break;
-           case 'Education':
-             value = this.getPersonAttributeValue('Education Level');
-             break;
-           case 'National ID':
-             value = this.getPersonAttributeValue('NationalID');
-             break;
-           case 'Economic Category':
-             value = this.getPersonAttributeValue('Economic Status');
-             break;
-           case 'Social Category':
-             value = this.getPersonAttributeValue('Caste');
-             break;
-           // case 'TMH Case Number':
-           //   value = this.getPersonAttributeValue('TMH Case Number');
-           //   break;
-           case 'Request ID':
-             value = this.getPersonAttributeValue('Request ID');
-             break;
-           case 'Discipline':
-             value = this.getPersonAttributeValue('Discipline');
-             break;
-           case 'Department':
-             value = this.getPersonAttributeValue('Department');
-             break;
-           case 'Relative Phone Number':
-             value = this.getPersonAttributeValue('Relative Phone Number');
-             break;
-           default:
-             break;
-         }
-         if (value != 'NA' && value) {
-           other.push({ 
-             stack: [
-               { text: e.name, style: 'subsubheader' },
-               { text: value, style: 'pval' }
-             ] 
-           });
-         }
-       });
-       const chunkSize = 4;
-       for (let i = 0; i < other.length; i += chunkSize) {
-           const chunk = other.slice(i, i + chunkSize);
-           if (chunk.length == chunkSize) {
-             data.table.body.push([...chunk]);
-           } else {
-             for (let x = chunk.length; x < chunkSize; x++) {
-               chunk[x] = '';
-             }
-             data.table.body.push([...chunk]);
-           }
-       }
-     } else {
-       data.table.body.push(['','','','']);
-     }
-     return data;
-   }
- 
-   checkIsVisibleSection(pvsConfig: { key: string; is_enabled: boolean; }) {
-     return checkIsEnabled(pvsConfig.key, 
-       pvsConfig.is_enabled, {
-       visitNotePresent: this.visitNotePresent,
-       hasVitalsEnabled: this.hasVitalsEnabled
-     })
-   }
- 
-   /**
-     * Retrieve the appropriate language value from an element.
-     * @param {any} element - An object containing `lang` and `name`.
-     * @return {string} - The value in the selected language or the first available one.
-     * Defaults to `element.name` if no language value is found.
-     */
-   getLanguageValue(element: any): string {
-     return getFieldValueByLanguage(element)
-   }
- 
-   isFeatureAvailable(featureName: string, notInclude = false): boolean {
-     return isFeaturePresent(featureName, notInclude);
-   }
- 
-   renderReferralSectionPDF() {
-     const referralFacility = isFeaturePresent('referralFacility', true)
-     const priorityOfReferral = isFeaturePresent('priorityOfReferral', true)
-     if (!referralFacility && !priorityOfReferral) {
-       return {
-         widths: ['35%', '65%'],
-         headerRows: 1,
-         body: [
-           [{ text: 'Referral to', style: 'tableHeader' }, { text: 'Referral for (Reason)', style: 'tableHeader' }],
-           ...this.getRecords('referral')
-         ]
-       }
-     }
- 
-     if (!priorityOfReferral) {
-       return {
-         widths: ['35%', '35%', '30%'],
-         headerRows: 1,
-         body: [
-           [{ text: 'Referral to', style: 'tableHeader' }, { text: 'Referral facility', style: 'tableHeader' }, { text: 'Referral for (Reason)', style: 'tableHeader' }],
-           ...this.getRecords('referral')
-         ]
-       }
-     }
- 
-     if (!referralFacility) {
-       return {
-         widths: ['35%', '35%', '30%'],
-         headerRows: 1,
-         body: [
-           [{ text: 'Referral to', style: 'tableHeader' }, { text: 'Priority', style: 'tableHeader' }, { text: 'Referral for (Reason)', style: 'tableHeader' }],
-           ...this.getRecords('referral')
-         ]
-       }
-     }
- 
-     return {
-       widths: ['30%', '30%', '10%', '30%'],
-       headerRows: 1,
-       body: [
-         [{ text: 'Referral to', style: 'tableHeader' }, { text: 'Referral facility', style: 'tableHeader' }, { text: 'Priority', style: 'tableHeader' }, { text: 'Referral for (Reason)', style: 'tableHeader' }],
-         ...this.getRecords('referral')
-       ]
-     }
-   }
- 
-   /**
-    * Get followUpInstructions for the visit
-    * @returns {void}
-    */
-   checkIfFollowUpInstructionsPresent(): void {
-     this.followUpInstructions = [];
-     this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, this.conceptFollowUpInstruction).subscribe((response: ObsApiResponseModel) => {
-       response.results.forEach((obs: ObsModel) => {
-         if (obs.encounter.visit.uuid === this.visit.uuid) {
-           this.followUpInstructions.push(obs);
-         }
-       });
-     });
-   }
- 
-   getDoctorRecommandation(){
-     let subFields = [[
-       {
-         colSpan: 4,
-         table: {
-           widths: [30, '*'],
-           headerRows: 1,
-           body: [
-             [ {image: 'medication', width: 25, height: 25, border: [false, false, false, true]  }, {text: 'Medications Advised', style: 'sectionheader', border: [false, false, false, true] }],
-             [
-               {
-                 colSpan: 2,
-                 table: {
-                   widths: ['*', 'auto', 'auto', 'auto', 'auto', 'auto'],
-                   headerRows: 1,
-                   body: [
-                     [{text: 'Drug name', style: 'tableHeader'}, {text: 'Strength', style: 'tableHeader'}, {text: 'No. of days', style: 'tableHeader'}, {text: 'Timing', style: 'tableHeader'}, {text: 'Frequency', style: 'tableHeader'}, {text: 'Remarks', style: 'tableHeader'}],
-                     ...this.getRecords('medication')
-                   ]
-                 },
-                 layout: 'lightHorizontalLines'
-               }
-             ],
-             [{ text: 'Additional Instructions:', style: 'sectionheader', colSpan: 2 }, ''],
-             [
-               {
-                 colSpan: 2,
-                 ul: [
-                   ...this.getRecords('additionalInstruction')
-                 ]
-               }
-             ]
-           ]
-         },
-         layout: {
-           defaultBorder: false
-         }
-       },
-       '',
-       '',
-       ''
-     ],
-     [
-       {
-         colSpan: 4,
-         table: {
-           widths: [30, '*'],
-           headerRows: 1,
-           body: [
-             [ {image: 'test', width: 25, height: 25, border: [false, false, false, true]  }, {text: 'Investigations Advised', style: 'sectionheader', border: [false, false, false, true] }],
-             [
-               {
-                 colSpan: 2,
-                 ul: [
-                   ...this.getRecords('test')
-                 ]
-               }
-             ]
-           ]
-         },
-         layout: {
-           defaultBorder: false
-         }
-       },
-       '',
-       '',
-       ''
-     ],
-     [
-       {
-         colSpan: 4,
-         table: {
-           widths: [30, '*'],
-           headerRows: 1,
-           body:  [
-             [ {image: 'referral', width: 25, height: 25, border: [false, false, false, true]  }, {text: 'Referral Advise', style: 'sectionheader', border: [false, false, false, true] }],
-             [
-               {
-                 colSpan: 2,
-                 table: this.renderReferralSectionPDF(),
-                 layout: 'lightHorizontalLines'
-               }
-             ]
-           ]
-         },
-         layout: {
-           defaultBorder: false
-         }
-       },
-       '',
-       '',
-       ''
-     ]];
- 
-     if(this.isFeatureAvailable('doctor-recommendation')){
-       return [
-         [
-           {
-             colSpan: 4,
-             table: {
-               widths: [30, '*','auto','auto'],
-               headerRows: 1,
-               body: [
-                 [ {image: 'advice', width: 25, height: 25, border: [false, false, false, true]  }, {colSpan: 3, text: 'Doctor\'s Recommendation', style: 'sectionheader', border: [false, false, false, true] },'',''],
-                 ...subFields
-               ]
-             },
-             layout: {
-               defaultBorder: false
-             }
-           },
-           '',
-           '',
-           ''
-         ]
-       ]
-     } else {
-       return subFields;
-     }
-   }
-      /**
-     * Download prescription
-     * @return {Promise<void>}
-     */
+  getPersonalInfo() {
+    const data = {
+      colSpan: 4,
+      layout: 'noBorders',
+      table: {
+        widths: ['*','*','*','*'],
+        body: [
+          [
+            {
+              colSpan: 4,
+              text: `Personal Information`,
+              style: 'subheader'
+            },
+            '',
+            '',
+            ''
+          ]
+        ]
+      }
+    };
 
-   async downloadPrescription() {
-    try {
-      const docDefinition = await this.generatePdf(); // Get the PDF content
-      pdfMake.createPdf(docDefinition).download('e-prescription.pdf'); 
-    } catch (error) {
-      console.error('Error generating or downloading PDF:', error);
+    let other = [];
+    this.appConfigService.patient_registration['personal'].forEach((e: PatientRegistrationFieldsModel) => {
+      let value: any;
+      switch (e.name) {
+        case 'Gender':
+          value = this.patient?.person.gender == 'M' ? 'Male' : 'Female';
+          break;
+        case 'Age':
+          value = this.patient?.person.age + ' years';
+          break;
+        case 'Date of Birth':
+          value = new Date(this.patient?.person.birthdate).toDateString();
+          break;
+        case 'Phone Number':
+          value = this.getPersonAttributeValue('Telephone Number');
+          break;
+        case 'Guardian Type':
+          value = this.getPersonAttributeValue('Guardian Type');
+          break;
+        case 'Guardian Name':
+          value = this.getPersonAttributeValue('Guardian Name');
+          break;
+        case 'Emergency Contact Name':
+          value = this.getPersonAttributeValue('Emergency Contact Name');
+          break;
+        case 'Emergency Contact Number':
+          value = this.getPersonAttributeValue('Emergency Contact Number');
+          break;
+        case 'Contact Type':
+          value = this.getPersonAttributeValue('Contact Type');
+          break;
+        case 'Email':
+          value = this.getPersonAttributeValue('Email');
+          break;
+        default:
+          break;
+      }
+      if (value !== 'NA' && value) {
+        other.push({
+          stack: [
+            { text: e.name, style: 'subsubheader' },
+            { text: value, style: 'pval' }
+          ]
+        });
+      }
+    });
+    const chunkSize = 4;
+    for (let i = 0; i < other.length; i += chunkSize) {
+      const chunk = other?.slice(i, i + chunkSize);
+      if (chunk.length == chunkSize) {
+        data.table.body.push([...chunk]);
+      } else {
+        for (let x = chunk.length; x < chunkSize; x++) {
+          chunk[x] = '';
+        }
+        data.table.body.push([...chunk]);
+      }
     }
+
+    return data;
+  }
+
+  getAddress() {
+    const data = {
+      colSpan: 4,
+      layout: 'noBorders',
+      table: {
+        widths: ['*','*','*','*'],
+        body: []
+      }
+    };
+    if (this.hasPatientAddressEnabled) {
+      data.table.body.push([
+        {
+          colSpan: 4,
+          text: `Address`,
+          style: 'subheader'
+        },
+        '',
+        '',
+        ''
+      ]);
+      let other = [];
+      this.appConfigService.patient_registration['address'].forEach((e: PatientRegistrationFieldsModel) => {
+        let value: any;
+        switch (e.name) {
+          case 'Household Number':
+            value = this.patient?.person?.preferredAddress?.address6;
+            break;
+          case 'Corresponding Address 1':
+            value = this.patient?.person?.preferredAddress?.address1;
+            break;
+          case 'Corresponding Address 2':
+            value = this.patient?.person?.preferredAddress?.address2;
+            break;
+          case 'Block':
+            value = this.patient?.person?.preferredAddress?.address3;
+            break;
+          case 'Village/Town/City':
+            value = this.patient?.person.preferredAddress?.cityVillage;
+            break;
+          case 'District':
+            value = this.patient?.person.preferredAddress?.countyDistrict;
+            break;
+          case 'State':
+            value = this.patient?.person.preferredAddress?.stateProvince;
+            break;
+          case 'Country':
+            value = this.patient?.person.preferredAddress?.country;
+            break;
+          case 'Postal Code':
+            value = this.patient?.person.preferredAddress?.postalCode;
+            break;
+          default:
+            break;
+        }
+        if (value) {
+          other.push({ 
+            stack: [
+              { text: e.name, style: 'subsubheader' },
+              { text: value, style: 'pval' }
+            ] 
+          });
+        }
+      });
+      const chunkSize = 4;
+      for (let i = 0; i < other.length; i += chunkSize) {
+          const chunk = other?.slice(i, i + chunkSize);
+          if (chunk.length == chunkSize) {
+            data.table.body.push([...chunk]);
+          } else {
+            for (let x = chunk.length; x < chunkSize; x++) {
+              chunk[x] = '';
+            }
+            data.table.body.push([...chunk]);
+          }
+      }
+    } else {
+      data.table.body.push(['','','','']);
+    }
+    return data;
+  }
+
+  getOtherInfo() {
+    const data = {
+      colSpan: 4,
+      layout: 'noBorders',
+      table: {
+        widths: ['*','*','*','*'],
+        body: []
+      }
+    };
+    if (this.hasPatientOtherEnabled) {
+      data.table.body.push([
+        {
+          colSpan: 4,
+          text: `Other Information`,
+          style: 'subheader'
+        },
+        '',
+        '',
+        ''
+      ]);
+      let other = [];
+      this.appConfigService.patient_registration['other'].forEach((e: PatientRegistrationFieldsModel) => {
+        let value: any;
+        switch (e.name) {
+          case 'Occupation':
+            value = this.getPersonAttributeValue('occupation');
+            break;
+          case 'Education':
+            value = this.getPersonAttributeValue('Education Level');
+            break;
+          case 'National ID':
+            value = this.getPersonAttributeValue('NationalID');
+            break;
+          case 'Economic Category':
+            value = this.getPersonAttributeValue('Economic Status');
+            break;
+          case 'Social Category':
+            value = this.getPersonAttributeValue('Caste');
+            break;
+          // case 'TMH Case Number':
+          //   value = this.getPersonAttributeValue('TMH Case Number');
+          //   break;
+          case 'Request ID':
+            value = this.getPersonAttributeValue('Request ID');
+            break;
+          case 'Discipline':
+            value = this.getPersonAttributeValue('Discipline');
+            break;
+          case 'Department':
+            value = this.getPersonAttributeValue('Department');
+            break;
+          case 'Relative Phone Number':
+            value = this.getPersonAttributeValue('Relative Phone Number');
+            break;
+          default:
+            break;
+        }
+        if (value != 'NA' && value) {
+          other.push({ 
+            stack: [
+              { text: e.name, style: 'subsubheader' },
+              { text: value, style: 'pval' }
+            ] 
+          });
+        }
+      });
+      const chunkSize = 4;
+      for (let i = 0; i < other.length; i += chunkSize) {
+          const chunk = other?.slice(i, i + chunkSize);
+          if (chunk.length == chunkSize) {
+            data.table.body.push([...chunk]);
+          } else {
+            for (let x = chunk.length; x < chunkSize; x++) {
+              chunk[x] = '';
+            }
+            data.table.body.push([...chunk]);
+          }
+      }
+    } else {
+      data.table.body.push(['','','','']);
+    }
+    return data;
+  }
+
+  checkIsVisibleSection(pvsConfig: { key: string; is_enabled: boolean; }) {
+    return checkIsEnabled(pvsConfig.key, 
+      pvsConfig.is_enabled, {
+      visitNotePresent: this.visitNotePresent,
+      hasVitalsEnabled: this.hasVitalsEnabled
+    })
+  }
+
+  /**
+   * Retrieve the appropriate language value from an element.
+   * @param {any} element - An object containing `lang` and `name`.
+   * @return {string} - The value in the selected language or the first available one.
+   * Defaults to `element.name` if no language value is found.
+   */
+  getLanguageValue(element: any): string {
+    return getFieldValueByLanguage(element)
+  }
+
+  isFeatureAvailable(featureName: string, notInclude = false): boolean {
+    return isFeaturePresent(featureName, notInclude);
+  }
+
+  renderReferralSectionPDF() {
+    const referralFacility = isFeaturePresent('referralFacility', true)
+    const priorityOfReferral = isFeaturePresent('priorityOfReferral', true)
+    if (!referralFacility && !priorityOfReferral) {
+      return {
+        widths: ['35%', '65%'],
+        headerRows: 1,
+        body: [
+          [{ text: 'Referral to', style: 'tableHeader' }, { text: 'Referral for (Reason)', style: 'tableHeader' }],
+          ...this.getRecords('referral')
+        ]
+      }
+    }
+
+    if (!priorityOfReferral) {
+      return {
+        widths: ['35%', '35%', '30%'],
+        headerRows: 1,
+        body: [
+          [{ text: 'Referral to', style: 'tableHeader' }, { text: 'Referral facility', style: 'tableHeader' }, { text: 'Referral for (Reason)', style: 'tableHeader' }],
+          ...this.getRecords('referral')
+        ]
+      }
+    }
+
+    if (!referralFacility) {
+      return {
+        widths: ['35%', '35%', '30%'],
+        headerRows: 1,
+        body: [
+          [{ text: 'Referral to', style: 'tableHeader' }, { text: 'Priority', style: 'tableHeader' }, { text: 'Referral for (Reason)', style: 'tableHeader' }],
+          ...this.getRecords('referral')
+        ]
+      }
+    }
+
+    return {
+      widths: ['30%', '30%', '10%', '30%'],
+      headerRows: 1,
+      body: [
+        [{ text: 'Referral to', style: 'tableHeader' }, { text: 'Referral facility', style: 'tableHeader' }, { text: 'Priority', style: 'tableHeader' }, { text: 'Referral for (Reason)', style: 'tableHeader' }],
+        ...this.getRecords('referral')
+      ]
+    }
+  }
+
+  /**
+  * Get followUpInstructions for the visit
+  * @returns {void}
+  */
+  checkIfFollowUpInstructionsPresent(): void {
+    this.followUpInstructions = [];
+    this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, this.conceptFollowUpInstruction).subscribe((response: ObsApiResponseModel) => {
+      response.results.forEach((obs: ObsModel) => {
+        if (obs.encounter.visit.uuid === this.visit.uuid) {
+          this.followUpInstructions.push(obs);
+        }
+      });
+    });
+  }
+
+  getDoctorRecommandation(){
+    let subFields = [[
+      {
+        colSpan: 4,
+        table: {
+          widths: [30, '*'],
+          headerRows: 1,
+          body: [
+            [ {image: 'medication', width: 25, height: 25, border: [false, false, false, true]  }, {text: 'Medications Advised', style: 'sectionheader', border: [false, false, false, true] }],
+            [
+              {
+                colSpan: 2,
+                table: {
+                  widths: ['*', 'auto', 'auto', 'auto', 'auto', 'auto'],
+                  headerRows: 1,
+                  body: [
+                    [{text: 'Drug name', style: 'tableHeader'}, {text: 'Strength', style: 'tableHeader'}, {text: 'No. of days', style: 'tableHeader'}, {text: 'Timing', style: 'tableHeader'}, {text: 'Frequency', style: 'tableHeader'}, {text: 'Remarks', style: 'tableHeader'}],
+                    ...this.getRecords('medication')
+                  ]
+                },
+                layout: 'lightHorizontalLines'
+              }
+            ],
+            [{ text: 'Additional Instructions:', style: 'sectionheader', colSpan: 2 }, ''],
+            [
+              {
+                colSpan: 2,
+                ul: [
+                  ...this.getRecords('additionalInstruction')
+                ]
+              }
+            ]
+          ]
+        },
+        layout: {
+          defaultBorder: false
+        }
+      },
+      '',
+      '',
+      ''
+    ],
+    [
+      {
+        colSpan: 4,
+        table: {
+          widths: [30, '*'],
+          headerRows: 1,
+          body: [
+            [ {image: 'test', width: 25, height: 25, border: [false, false, false, true]  }, {text: 'Investigations Advised', style: 'sectionheader', border: [false, false, false, true] }],
+            [
+              {
+                colSpan: 2,
+                ul: [
+                  ...this.getRecords('test')
+                ]
+              }
+            ]
+          ]
+        },
+        layout: {
+          defaultBorder: false
+        }
+      },
+      '',
+      '',
+      ''
+    ],
+    [
+      {
+        colSpan: 4,
+        table: {
+          widths: [30, '*'],
+          headerRows: 1,
+          body:  [
+            [ {image: 'referral', width: 25, height: 25, border: [false, false, false, true]  }, {text: 'Referral Advise', style: 'sectionheader', border: [false, false, false, true] }],
+            [
+              {
+                colSpan: 2,
+                table: this.renderReferralSectionPDF(),
+                layout: 'lightHorizontalLines'
+              }
+            ]
+          ]
+        },
+        layout: {
+          defaultBorder: false
+        }
+      },
+      '',
+      '',
+      ''
+    ]];
+
+    if(this.isFeatureAvailable('doctor-recommendation')){
+      return [
+        [
+          {
+            colSpan: 4,
+            table: {
+              widths: [30, '*','auto','auto'],
+              headerRows: 1,
+              body: [
+                [ {image: 'advice', width: 25, height: 25, border: [false, false, false, true]  }, {colSpan: 3, text: 'Doctor\'s Recommendation', style: 'sectionheader', border: [false, false, false, true] },'',''],
+                ...subFields
+              ]
+            },
+            layout: {
+              defaultBorder: false
+            }
+          },
+          '',
+          '',
+          ''
+        ]
+      ]
+    } else {
+      return subFields;
+    }
+  }
+  /**
+ * Download prescription
+ * @return {Promise<void>}
+ */
+
+  async downloadPrescription() {
+  try {
+    const docDefinition = await this.generatePdf(); // Get the PDF content
+    pdfMake.createPdf(docDefinition).download('e-prescription.pdf'); 
+  } catch (error) {
+    console.error('Error generating or downloading PDF:', error);
+  }
   }
   async generatePdf() {
     const userImg: any = await this.toObjectUrl(`${this.baseUrl}/personimage/${this.patient?.person.uuid}`);
