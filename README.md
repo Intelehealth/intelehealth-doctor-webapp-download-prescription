@@ -1,79 +1,84 @@
-# IntelehealthUi
+# LibPresciption
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.2.2.
+This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.0.
 
-## Getting Started
+## Code scaffolding
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+Run `ng generate component component-name --project lib-presciption` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module --project lib-presciption`.
+> Note: Don't forget to add `--project lib-presciption` or else it will be added to the default project in your `angular.json` file. 
 
-### Prerequisites
-Node.js
-   ```
-   https://nodejs.org/en/
-   ```
-   
-    
-### Installing
-A step by step series of examples that tell you how to get a development environment running
-1. Clone or download this repository
-2. Install all the dependencies.
-```
-"npm install"
-```    
-3. Start the server
-```
-"ng serve"
-```
+## Build
 
-4. Open in browser
-```
- "localhost:4200"
-```
+Run `ng build lib-presciption` to build the project. The build artifacts will be stored in the `dist/` directory.
 
-## Built With
+## Publishing
 
-* [Angular](https://angular.io/) - Angular Framework
-* [Angular Material](https://material.angular.io/) - Designing
-* [BootStrap](https://getbootstrap.com/) - Table, Cards and other UI design
+After building your library with `ng build lib-presciption`, go to the dist folder `cd dist/lib-presciption` and run `npm publish`.
 
-## Commeting Message (Examples)
-1.Commit message with description and change in body
-```
-fix: allow provided config object to extend other configs
-```
-2.Commit message with scope
-```
-feat(lang): add language data
-```
-3.Commit message with optional ! to draw attention to breaking change
-```
-revert!: drop Node 8 from testing matrix
-```
+## Running unit tests
 
-## .env (Create .env in the root folder and use below environment keys)
+Run `ng test lib-presciption` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+## Installation
+
+To install the Presciption Library, run the following command:
+
+### Install from GitHub
+
+```bash
+
+npm install git+https://github.com/Intelehealth/intelehealth-doctor-webapp-download-prescription#build_0.1
 
 ```
-PRODUCTION=false
-BASE=XXXXX
-BASE_URL=XXXXX
-BASE_URL_CORD_APP=XXXXX
-BASE_URL_LEGACY=XXXXX
-MIND_MAP_URL=XXXXX
-CONFIG_URL=XXXXX
-NOTIFICATION_URL=XXXXX
-SOCKET_URL=XXXXX
-CAPTCHA_SITE_KEY=XXXXX
-WEB_RTC_SDK_SERVER_URL=XXXXX
-WEB_RTC_TOKEN_SERVER_URL=XXXXX
-SITE_KEY=XXXXX
-EXTERNAL_PRESCRIPTION_CRED=XXXXX
-VAPID_PUBLIC_KEY=XXXXX
-AUTH_GATE_WAY_URL=XXXXX
-FIREBASE_API_KEY=XXXXX
-FIREBASE_AUTH_DOMAIN=XXXXX
-FIREBASE_PROJECT_ID=XXXXX
-FIREBASE_STORAGE_BUCKET=XXXXX
-FIREBASE_MESSAGING_SENDER_ID=XXXXX
-FIREBASE_APP_ID=XXXXX
-SHOW_CAPTCHA=true/false
+
+Note: The --force flag is used to override any dependency conflicts. Use it cautiously to avoid breaking changes in your project.
+
+#build_0.1 refers the git branch where build files are placed
+
+### Usage
+Once the package is installed, you can import the `LibPresciptionModule` in your Angular application.
+
+### Import the Module
+In your Angular module (e.g., `app.module.ts`), import the `LibPresciptionModule`:
+
+
+```typescript
+import { LibPresciptionModule } from 'lib-presciption';
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [ LibPresciptionModule.forRoot(environment),],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+```
+
+### Using the Component
+To use the presciption component, add the <lib-presciption> selector to your template file:
+
+```html
+<lib-presciption></lib-presciption>
+```
+
+### Using the env files
+To use the env file from the application to the plugin 
+
+In your Angular module (e.g., `app.module.ts`)
+
+```
+import { LibPresciptionModule } from 'lib-presciption';
+import { environment } from "../environments/environment";
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [ LibPresciptionModule.forRoot(environment),],
+  providers: [{ provide: 'environment', useValue: environment }],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+
 ```
