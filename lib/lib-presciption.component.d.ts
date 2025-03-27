@@ -12,7 +12,7 @@ import * as i0 from "@angular/core";
 export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     data: any;
     private dialogRef;
-    private appConfigService;
+    appConfigService: AppConfigService;
     private translateService;
     private visitService;
     private diagnosisService;
@@ -266,13 +266,13 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     * @param {string} url - Image url
     * @return {Promise} - Promise containing base64 image
     */
-    toObjectUrl(url: string): Promise<string | null>;
+    toObjectUrl(url: string): Promise<unknown>;
     ngOnDestroy(): void;
     /**
-    * Get vital value for a given vital uuid
-    * @param {string} uuid - Vital uuid
-    * @return {any} - Obs value
-    */
+   * Get vital value for a given vital uuid
+   * @param {string} uuid - Vital uuid
+   * @return {any} - Obs value
+   */
     getObsValue(uuid: string, key?: string): any;
     checkPatientRegField(fieldName: string): boolean;
     get shouldShowProfilePhoto(): boolean;
@@ -312,11 +312,11 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
         expanded: boolean;
     };
     /**
-      * Retrieve the appropriate language value from an element.
-      * @param {any} element - An object containing `lang` and `name`.
-      * @return {string} - The value in the selected language or the first available one.
-      * Defaults to `element.name` if no language value is found.
-      */
+     * Retrieve the appropriate language value from an element.
+     * @param {any} element - An object containing `lang` and `name`.
+     * @return {string} - The value in the selected language or the first available one.
+     * Defaults to `element.name` if no language value is found.
+     */
     getLanguageValue(element: any): string;
     isFeatureAvailable(featureName: string, notInclude?: boolean): boolean;
     renderReferralSectionPDF(): {
@@ -325,9 +325,9 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
         body: any[];
     };
     /**
-     * Get followUpInstructions for the visit
-     * @returns {void}
-     */
+    * Get followUpInstructions for the visit
+    * @returns {void}
+    */
     checkIfFollowUpInstructionsPresent(): void;
     getDoctorRecommandation(): (string | {
         colSpan: number;
