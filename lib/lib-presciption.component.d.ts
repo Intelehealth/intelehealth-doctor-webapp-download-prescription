@@ -350,18 +350,6 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                 height?: undefined;
             })[] | {
                 colSpan: number;
-                table: {
-                    widths: string[];
-                    headerRows: number;
-                    body: any[];
-                };
-                layout: string;
-            }[] | (string | {
-                text: string;
-                style: string;
-                colSpan: number;
-            })[] | {
-                colSpan: number;
                 ul: any[];
             }[])[];
         };
@@ -392,18 +380,6 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                         image?: undefined;
                         width?: undefined;
                         height?: undefined;
-                    })[] | {
-                        colSpan: number;
-                        table: {
-                            widths: string[];
-                            headerRows: number;
-                            body: any[];
-                        };
-                        layout: string;
-                    }[] | (string | {
-                        text: string;
-                        style: string;
-                        colSpan: number;
                     })[] | {
                         colSpan: number;
                         ul: any[];
@@ -515,18 +491,6 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                             height?: undefined;
                         })[] | {
                             colSpan: number;
-                            table: {
-                                widths: string[];
-                                headerRows: number;
-                                body: any[];
-                            };
-                            layout: string;
-                        }[] | (string | {
-                            text: string;
-                            style: string;
-                            colSpan: number;
-                        })[] | {
-                            colSpan: number;
                             ul: any[];
                         }[])[];
                     };
@@ -557,18 +521,6 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                                     image?: undefined;
                                     width?: undefined;
                                     height?: undefined;
-                                })[] | {
-                                    colSpan: number;
-                                    table: {
-                                        widths: string[];
-                                        headerRows: number;
-                                        body: any[];
-                                    };
-                                    layout: string;
-                                }[] | (string | {
-                                    text: string;
-                                    style: string;
-                                    colSpan: number;
                                 })[] | {
                                     colSpan: number;
                                     ul: any[];
@@ -670,6 +622,38 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                         })[] | {
                             colSpan: number;
                             ul: any[];
+                        }[])[];
+                    };
+                    layout: {
+                        defaultBorder: boolean;
+                    };
+                })[] | (string | {
+                    colSpan: number;
+                    table: {
+                        widths: (string | number)[];
+                        headerRows: number;
+                        body: (({
+                            image: string;
+                            width: number;
+                            height: number;
+                            border: boolean[];
+                            text?: undefined;
+                            style?: undefined;
+                        } | {
+                            text: string;
+                            style: string;
+                            border: boolean[];
+                            image?: undefined;
+                            width?: undefined;
+                            height?: undefined;
+                        })[] | {
+                            colSpan: number;
+                            table: {
+                                widths: string[];
+                                headerRows: number;
+                                body: any[];
+                            };
+                            layout: string;
                         }[])[];
                     };
                     layout: {

@@ -138,6 +138,7 @@ export declare const conceptIds: {
     conceptMed: string;
     conceptAdvice: string;
     conceptTest: string;
+    conceptInvestigationsTest: string;
     conceptReferral: string;
     conceptFollow: string;
     conceptDDx: string;
@@ -145,6 +146,8 @@ export declare const conceptIds: {
     conceptPastMedicalHistoryNotes: string;
     conceptFamilyHistoryNotes: string;
     conceptFollowUpInstruction: string;
+    conceptDiscussionSummary: string;
+    conceptFrequencyList: string;
 };
 export declare const WEBRTC: {
     CHAT_TEXT_LIMIT: number;
