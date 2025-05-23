@@ -99,7 +99,10 @@ export class LibPresciptionComponent implements OnInit,OnDestroy {
   eventsSubscription: any;
   prodBoolean: boolean
   discussionSummary: string = "";
-  checkUpReasonData: any = []
+  checkUpReasonData: any = [];
+
+  recommendation: { uuid: string; value: any; };
+  brandName: boolean = false;
  
   constructor(
      @Inject(MAT_DIALOG_DATA) public data:any,
@@ -113,7 +116,8 @@ export class LibPresciptionComponent implements OnInit,OnDestroy {
     ) {
       this.baseUrl = this.envService.getConfig('baseURL');
       this.configPublicURL = this.envService.getConfig('configPublicURL');
-      this.envProduction = this.envService.getConfig('production')
+      this.envProduction = this.envService.getConfig('production');
+      this.brandName = this.envService.getConfig('brandName') === "KCDO";
     }
 
 ngOnInit(): void {
@@ -193,6 +197,7 @@ ngOnInit(): void {
                 this.checkIfFollowUpPresent();
                 this.checkIfFollowUpInstructionsPresent();
                 this.checkIfDiscussionSummaryPresent();
+                this.checkIfRecommendationPresent();
               }
               this.getCheckUpReason(visit.encounters);
               this.getVitalObs(visit.encounters);
@@ -437,6 +442,21 @@ ngOnInit(): void {
         });
       });
    }
+
+   /**
+  * Get Recommendation for the visit
+  * @returns {void}
+  */
+  checkIfRecommendationPresent(): void {
+    this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, conceptIds.conceptRecommendation)
+    .subscribe((response: ObsApiResponseModel) => {
+      response.results.forEach((obs: ObsModel) => {
+        if(obs.encounter && obs.encounter.visit.uuid === this.visit.uuid){
+          this.recommendation = {uuid: obs.uuid, value: obs.value}
+        }
+      });
+    });
+  }
  
    /**
    * Get followup for the visit
@@ -763,6 +783,13 @@ ngOnInit(): void {
           });
         } else {
           records.push([{ text: 'No Follow Up Instructions added'}]);
+        }
+        break;
+      case 'recommendation':
+        if (this.recommendation) {
+          records.push({ text: this.recommendation.value, margin: [0, 5, 0, 5] });
+        } else {
+          records.push([{ text: 'No Recommendation added'}]);
         }
         break;
     }
@@ -1304,11 +1331,18 @@ ngOnInit(): void {
           {
             colSpan: 4,
             table: {
-              widths: [30, '*','auto','auto'],
+              widths: [30, '*'],
               headerRows: 1,
               body: [
-                [ {image: 'advice', width: 25, height: 25, border: [false, false, false, true]  }, {colSpan: 3, text: 'Recommendation', style: 'sectionheader', border: [false, false, false, true] },'',''],
-                ...subFields
+                [ {image: 'advice', width: 25, height: 25, border: [false, false, false, true]  }, {text: 'Recommendation', style: 'sectionheader', border: [false, false, false, true] }],
+                [
+                  {
+                    colSpan: 2,
+                    ul: [
+                      ...this.getRecords('recommendation')
+                    ]
+                  }
+                ]
               ]
             },
             layout: {
