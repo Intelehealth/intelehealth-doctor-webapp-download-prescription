@@ -107,6 +107,11 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     prodBoolean: boolean;
     discussionSummary: string;
     checkUpReasonData: any;
+    recommendation: {
+        uuid: string;
+        value: any;
+    };
+    brandName: boolean;
     constructor(data: any, dialogRef: MatDialogRef<LibPresciptionComponent>, appConfigService: AppConfigService, translateService: TranslateService, visitService: VisitService, diagnosisService: DiagnosisService, profileService: ProfileService, envService: EnvConfigService);
     ngOnInit(): void;
     /**
@@ -168,6 +173,11 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     * @returns {void}
     */
     checkIfReferralPresent(): void;
+    /**
+   * Get Recommendation for the visit
+   * @returns {void}
+   */
+    checkIfRecommendationPresent(): void;
     /**
     * Get followup for the visit
     * @returns {void}
@@ -356,59 +366,6 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
         layout: {
             defaultBorder: boolean;
         };
-    })[][] | (string | {
-        colSpan: number;
-        table: {
-            widths: (string | number)[];
-            headerRows: number;
-            body: ((string | {
-                colSpan: number;
-                table: {
-                    widths: (string | number)[];
-                    headerRows: number;
-                    body: (({
-                        image: string;
-                        width: number;
-                        height: number;
-                        border: boolean[];
-                        text?: undefined;
-                        style?: undefined;
-                    } | {
-                        text: string;
-                        style: string;
-                        border: boolean[];
-                        image?: undefined;
-                        width?: undefined;
-                        height?: undefined;
-                    })[] | {
-                        colSpan: number;
-                        ul: any[];
-                    }[])[];
-                };
-                layout: {
-                    defaultBorder: boolean;
-                };
-            })[] | (string | {
-                image: string;
-                width: number;
-                height: number;
-                border: boolean[];
-                colSpan?: undefined;
-                text?: undefined;
-                style?: undefined;
-            } | {
-                colSpan: number;
-                text: string;
-                style: string;
-                border: boolean[];
-                image?: undefined;
-                width?: undefined;
-                height?: undefined;
-            })[])[];
-        };
-        layout: {
-            defaultBorder: boolean;
-        };
     })[][];
     /**
    * Download prescription
@@ -493,59 +450,6 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                             colSpan: number;
                             ul: any[];
                         }[])[];
-                    };
-                    layout: {
-                        defaultBorder: boolean;
-                    };
-                })[] | (string | {
-                    colSpan: number;
-                    table: {
-                        widths: (string | number)[];
-                        headerRows: number;
-                        body: ((string | {
-                            colSpan: number;
-                            table: {
-                                widths: (string | number)[];
-                                headerRows: number;
-                                body: (({
-                                    image: string;
-                                    width: number;
-                                    height: number;
-                                    border: boolean[];
-                                    text?: undefined;
-                                    style?: undefined;
-                                } | {
-                                    text: string;
-                                    style: string;
-                                    border: boolean[];
-                                    image?: undefined;
-                                    width?: undefined;
-                                    height?: undefined;
-                                })[] | {
-                                    colSpan: number;
-                                    ul: any[];
-                                }[])[];
-                            };
-                            layout: {
-                                defaultBorder: boolean;
-                            };
-                        })[] | (string | {
-                            image: string;
-                            width: number;
-                            height: number;
-                            border: boolean[];
-                            colSpan?: undefined;
-                            text?: undefined;
-                            style?: undefined;
-                        } | {
-                            colSpan: number;
-                            text: string;
-                            style: string;
-                            border: boolean[];
-                            image?: undefined;
-                            width?: undefined;
-                            height?: undefined;
-                        })[])[];
                     };
                     layout: {
                         defaultBorder: boolean;

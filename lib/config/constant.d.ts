@@ -148,6 +148,7 @@ export declare const conceptIds: {
     conceptFollowUpInstruction: string;
     conceptDiscussionSummary: string;
     conceptFrequencyList: string;
+    conceptRecommendation: string;
 };
 export declare const WEBRTC: {
     CHAT_TEXT_LIMIT: number;
