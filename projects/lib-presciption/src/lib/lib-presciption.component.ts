@@ -685,7 +685,7 @@ ngOnInit(): void {
     switch (type) {
       case 'diagnosis':
         if(this.appConfigService.patient_visit_summary?.dp_dignosis_secondary){
-          records.push([this.dignosisSecondary['diagnosis'],this.dignosisSecondary['type'],this.dignosisSecondary['tnm'],this.dignosisSecondary['otherStaging']]);
+          records.push([this.dignosisSecondary['diagnosis']?this.dignosisSecondary['diagnosis']:"",this.dignosisSecondary['type']?this.dignosisSecondary['type']:"",this.dignosisSecondary['tnm']?this.dignosisSecondary['tnm']:"",this.dignosisSecondary['otherStaging']?this.dignosisSecondary['otherStaging']:""]);
         } else if (this.existingDiagnosis.length) {
           this.existingDiagnosis.forEach(d => {
             records.push([d.diagnosisName, d.diagnosisType, d.diagnosisStatus]);
