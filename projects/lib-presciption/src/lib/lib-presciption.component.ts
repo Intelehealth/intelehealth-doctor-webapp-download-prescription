@@ -317,7 +317,7 @@ ngOnInit(): void {
     this.diagnosisService.getObs(this.baseUrl, this.visit.patient.uuid, conceptIds.conceptDiagnosis).subscribe((response: ObsApiResponseModel) => {
       response.results.forEach((obs: ObsModel) => {
         if (obs.encounter.visit.uuid === this.visit.uuid) {
-          if(this.appConfigService.patient_visit_summary?.dp_dignosis_secondary){
+          if(this.isFeatureAvailable('dp_diagnosis_secondary')){
             this.dignosisSecondary = obsParse(obs.value)
           } else {
             this.existingDiagnosis.push({
@@ -432,9 +432,7 @@ ngOnInit(): void {
       .subscribe((response: ObsApiResponseModel) => {
         response.results.forEach((obs: ObsModel) => {
           if (obs.encounter && obs.encounter.visit.uuid === this.visit.uuid) {
-            if(this.appConfigService.patient_visit_summary?.dp_referral_secondary)
-              this.referralSecondary = obs.value
-            else if(obs.value.includes(":")) {
+            if(obs.value.includes(":")) {
               const obs_values = obs.value.split(':');
               this.referrals.push({ uuid: obs.uuid, speciality: obs_values[0].trim(), facility: obs_values[1].trim(), priority: obs_values[2].trim(), reason: obs_values[3].trim()? obs_values[3].trim():'-' });
             }
@@ -684,7 +682,7 @@ ngOnInit(): void {
     const records = [];
     switch (type) {
       case 'diagnosis':
-        if(this.appConfigService.patient_visit_summary?.dp_dignosis_secondary){
+        if(this.isFeatureAvailable('dp_dignosis_secondary')){
           records.push([this.dignosisSecondary['diagnosis']?this.dignosisSecondary['diagnosis']:"",this.dignosisSecondary['type']?this.dignosisSecondary['type']:"",this.dignosisSecondary['tnm']?this.dignosisSecondary['tnm']:"",this.dignosisSecondary['otherStaging']?this.dignosisSecondary['otherStaging']:""]);
         } else if (this.existingDiagnosis.length) {
           this.existingDiagnosis.forEach(d => {
@@ -708,8 +706,6 @@ ngOnInit(): void {
           this.additionalInstructions.forEach(ai => {
             records.push({ text: ai.value, margin: [0, 5, 0, 5] });
           });
-        } else if(!this.appConfigService?.patient_visit_summary?.dp_medication_secondary) {
-          records.push([{ text: 'No additional instructions added'}]);
         } else {
           records.push([{ text: 'No additional instructions added'}]);
         }
@@ -736,9 +732,7 @@ ngOnInit(): void {
         const referralFacility = this.isFeatureAvailable('referralFacility', true)
         const priorityOfReferral = this.isFeatureAvailable('priorityOfReferral', true)
         let length = 2;
-        if(this.appConfigService.patient_visit_summary?.dp_referral_secondary && this.referralSecondary){
-          records.push([{ text: this.referralSecondary, colSpan: length}]);
-        } else if (this.referrals.length) {
+        if (this.referrals.length) {
           this.referrals.forEach(r => {
             const referral = [r.speciality];
             if(referralFacility) referral.push(r.facility)
@@ -762,7 +756,7 @@ ngOnInit(): void {
           }
           break;
       case 'cheifComplaint':
-        if(this.appConfigService?.patient_visit_summary?.dp_dignosis_secondary && this.checkUpReasonData.length > 0){
+        if(this.isFeatureAvailable('dp_diagnosis_secondary') && this.checkUpReasonData.length > 0){
           this.checkUpReasonData[0].data.forEach((cc:any)=>{
             records.push({text: [{text: cc.key + ":", bold: true}, cc.value], margin: [0, 5, 0, 5]});
           });
@@ -1794,7 +1788,7 @@ ngOnInit(): void {
   }
 
   getDiscussionSummary(){
-    if(!this.appConfigService.patient_visit_summary?.dp_discussion_summary) return [];
+    if(!this.isFeatureAvailable('dp_discussion_summary')) return [];
     return [
       [
         {
@@ -1827,7 +1821,7 @@ ngOnInit(): void {
   }
 
   getDiagnosis() {
-    if (!this.appConfigService.patient_visit_summary?.dp_dignosis_secondary) return [];
+    if (!this.isFeatureAvailable('dp_dignosis_secondary')) return [];
 
     return [
       {
