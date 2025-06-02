@@ -682,7 +682,7 @@ ngOnInit(): void {
     const records = [];
     switch (type) {
       case 'diagnosis':
-        if(this.isFeatureAvailable('dp_dignosis_secondary')){
+        if(this.isFeatureAvailable('dp_diagnosis_secondary')){
           records.push([this.dignosisSecondary['diagnosis']?this.dignosisSecondary['diagnosis']:"",this.dignosisSecondary['type']?this.dignosisSecondary['type']:"",this.dignosisSecondary['tnm']?this.dignosisSecondary['tnm']:"",this.dignosisSecondary['otherStaging']?this.dignosisSecondary['otherStaging']:""]);
         } else if (this.existingDiagnosis.length) {
           this.existingDiagnosis.forEach(d => {
@@ -1126,7 +1126,9 @@ ngOnInit(): void {
   }
 
   isFeatureAvailable(featureName: string, notInclude = false): boolean {
-    return isFeaturePresent(featureName, notInclude);
+    const featureList = this.envService.getConfig('featureList')
+    if(notInclude) return !featureList.includes(featureName);
+    return featureList.includes(featureName);
   }
 
   renderReferralSectionPDF() {
@@ -1821,7 +1823,7 @@ ngOnInit(): void {
   }
 
   getDiagnosis() {
-    if (!this.isFeatureAvailable('dp_dignosis_secondary')) return [];
+    if (!this.isFeatureAvailable('dp_diagnosis_secondary')) return [];
 
     return [
       {
@@ -1838,11 +1840,11 @@ ngOnInit(): void {
               {
                 colSpan: 2,
                 table: {
-                  widths: this.appConfigService.patient_visit_summary?.dp_dignosis_secondary ? ['40%', '*', '*', '*'] : ['*', '*', '*'],
+                  widths: this.isFeatureAvailable('dp_diagnosis_secondary') ? ['40%', '*', '*', '*'] : ['*', '*', '*'],
                   headerRows: 1,
                   body: [
                     // Header Row
-                    this.appConfigService.patient_visit_summary?.dp_dignosis_secondary
+                    this.isFeatureAvailable('dp_diagnosis_secondary')
                       ? [
                           { text: 'Diagnosis', style: 'tableHeader' },
                           { text: 'Type', style: 'tableHeader' },
@@ -1859,7 +1861,7 @@ ngOnInit(): void {
                     ...this.getRecords('diagnosis').map(row => {
                       // Ensure each row has the correct number of cells
                       const paddedRow = [...row];
-                      while (paddedRow.length < (this.appConfigService.patient_visit_summary?.dp_dignosis_secondary ? 4 : 3)) {
+                      while (paddedRow.length < (this.isFeatureAvailable('dp_diagnosis_secondary') ? 4 : 3)) {
                         paddedRow.push({ text: '' }); // Add empty cells if needed
                       }
                       return paddedRow;
