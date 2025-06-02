@@ -1823,8 +1823,6 @@ ngOnInit(): void {
   }
 
   getDiagnosis() {
-    if (!this.isFeatureAvailable('dp_diagnosis_secondary')) return [];
-
     return [
       {
         colSpan: 4,
