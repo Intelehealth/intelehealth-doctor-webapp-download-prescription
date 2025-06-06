@@ -2686,6 +2686,7 @@ class LibPresciptionComponent {
                             [
                                 {
                                     colSpan: 4,
+                                    sectionName: "referral",
                                     table: {
                                         widths: [30, '*'],
                                         headerRows: 1,
@@ -2829,6 +2830,8 @@ class LibPresciptionComponent {
             if (section[0].sectionName === 'visitFollowUp' && !this.isFeatureAvailable('visitFollowUp'))
                 return false;
             if (section[0].sectionName === 'advice' && !this.isFeatureAvailable('advice'))
+                return false;
+            if (section[0].sectionName === 'referral' && this.brandName)
                 return false;
             return true;
         });

@@ -533,38 +533,6 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                     };
                 })[] | (string | {
                     colSpan: number;
-                    table: {
-                        widths: (string | number)[];
-                        headerRows: number;
-                        body: (({
-                            image: string;
-                            width: number;
-                            height: number;
-                            border: boolean[];
-                            text?: undefined;
-                            style?: undefined;
-                        } | {
-                            text: string;
-                            style: string;
-                            border: boolean[];
-                            image?: undefined;
-                            width?: undefined;
-                            height?: undefined;
-                        })[] | {
-                            colSpan: number;
-                            table: {
-                                widths: string[];
-                                headerRows: number;
-                                body: any[];
-                            };
-                            layout: string;
-                        }[])[];
-                    };
-                    layout: {
-                        defaultBorder: boolean;
-                    };
-                })[] | (string | {
-                    colSpan: number;
                     sectionName: string;
                     table: {
                         widths: (string | number)[];
