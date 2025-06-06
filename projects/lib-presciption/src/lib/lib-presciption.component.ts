@@ -1642,6 +1642,7 @@ ngOnInit(): void {
               [
                 {
                   colSpan: 4,
+                  sectionName: "referral",
                   table: {
                     widths: [30, '*'],
                     headerRows: 1,
@@ -1784,6 +1785,7 @@ ngOnInit(): void {
       if(section[0].sectionName === 'followUpInstructions' && !this.isFeatureAvailable('follow-up-instruction')) return false;
       if(section[0].sectionName === 'visitFollowUp' && !this.isFeatureAvailable('visitFollowUp')) return false;
       if(section[0].sectionName === 'advice' && !this.isFeatureAvailable('advice')) return false;
+      if(section[0].sectionName === 'referral' && this.brandName) return false;
       return true;
     });
     return pdfObj;
