@@ -146,13 +146,6 @@ export function calculateBMI(vitals: any, vitalObs: any, _locale: string = 'en')
   return null;
 }
 
-export function isFeaturePresent(featureName: string, notInclude = false): boolean {
-  const featureList = ['followUpType','tnmStaging','referralFacility','priorityOfReferral','follow-up-instruction','doctor-recommendation']
-  if(notInclude) return !featureList.includes(featureName);
-  return featureList.includes(featureName);
-}
-
-
 export function getCallDuration(given_seconds: number){
   let dateObj = new Date(given_seconds * 1000);
   let hours = dateObj.getUTCHours();

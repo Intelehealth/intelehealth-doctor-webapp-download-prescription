@@ -8,7 +8,7 @@ export class EnvConfigService {
   
   private config: any;
 
-  constructor(@Inject(ENV_CONFIG) private envConfig: any) {
+  constructor(@Inject(ENV_CONFIG) public envConfig: any) {
     this.config = envConfig;
   }
 

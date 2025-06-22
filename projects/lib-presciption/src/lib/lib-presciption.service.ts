@@ -1,7 +1,6 @@
 import { Inject, Injectable } from "@angular/core";
-import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { Observable, Subject } from "rxjs";
-// import { environment } from "src/environments/environment";
+import { HttpClient } from "@angular/common/http";
+import { Observable, } from "rxjs";
 import { MatDialog} from '@angular/material/dialog';
 import { LibPresciptionComponent } from "./lib-presciption.component";
 
@@ -25,7 +24,6 @@ export class LibPresciptionService {
     private dialog: MatDialog,
     @Inject('environment') environment
   ) { 
-    // this.baseURL = "https://dev.intelehealth.org/openmrs/ws/rest/v1"
     this.baseURL = environment.BASE_URL
   }
   fetchVisitDetails(
