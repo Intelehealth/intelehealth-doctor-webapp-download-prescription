@@ -1,6 +1,6 @@
 import * as i0 from "@angular/core";
 export declare class EnvConfigService {
-    private envConfig;
+    envConfig: any;
     private config;
     constructor(envConfig: any);
     getConfig(key: string): any;

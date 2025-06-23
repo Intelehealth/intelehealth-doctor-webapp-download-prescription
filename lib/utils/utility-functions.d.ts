@@ -40,7 +40,6 @@ interface Element {
 }
 export declare function getFieldValueByLanguage(element: Element | null | undefined): string;
 export declare function calculateBMI(vitals: any, vitalObs: any, _locale?: string): string;
-export declare function isFeaturePresent(featureName: string, notInclude?: boolean): boolean;
 export declare function getCallDuration(given_seconds: number): string;
 export declare function autoGrowTextZone(e: any): void;
 export declare function autoGrowAllTextAreaZone(e: HTMLTextAreaElement[]): void;

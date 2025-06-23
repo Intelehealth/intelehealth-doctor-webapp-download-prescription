@@ -744,12 +744,6 @@ function calculateBMI(vitals, vitalObs, _locale = 'en') {
     }
     return null;
 }
-function isFeaturePresent(featureName, notInclude = false) {
-    const featureList = ['followUpType', 'tnmStaging', 'referralFacility', 'priorityOfReferral', 'follow-up-instruction', 'doctor-recommendation'];
-    if (notInclude)
-        return !featureList.includes(featureName);
-    return featureList.includes(featureName);
-}
 function getCallDuration(given_seconds) {
     let dateObj = new Date(given_seconds * 1000);
     let hours = dateObj.getUTCHours();
@@ -1382,12 +1376,22 @@ class LibPresciptionComponent {
                         this.dignosisSecondary = obsParse(obs.value);
                     }
                     else {
-                        this.existingDiagnosis.push({
-                            diagnosisName: obs.value.split(':')[0].trim(),
-                            diagnosisType: obs.value.split(':')[1].split('&')[0].trim(),
-                            diagnosisStatus: obs.value.split(':')[1].split('&')[1].trim(),
-                            uuid: obs.uuid
-                        });
+                        if (obs.value.includes("}")) {
+                            let obsData = obsParse(obs.value, obs.uuid);
+                            this.existingDiagnosis.push({
+                                diagnosisName: obsData.diagnosis,
+                                diagnosisStatus: obsData.type,
+                                uuid: obsData.uuid,
+                            });
+                        }
+                        else {
+                            this.existingDiagnosis.push({
+                                diagnosisName: obs.value.split(':')?.[0]?.trim(),
+                                diagnosisType: obs.value.split(':')?.[1]?.split('&')?.[0]?.trim(),
+                                diagnosisStatus: obs.value.split(':')?.[1]?.split('&')?.[1]?.trim(),
+                                uuid: obs.uuid
+                            });
+                        }
                     }
                 }
             });
@@ -1727,11 +1731,18 @@ class LibPresciptionComponent {
         switch (type) {
             case 'diagnosis':
                 if (this.isFeatureAvailable('dp_diagnosis_secondary')) {
-                    records.push([this.dignosisSecondary['diagnosis'] ? this.dignosisSecondary['diagnosis'] : "", this.dignosisSecondary['type'] ? this.dignosisSecondary['type'] : "", this.dignosisSecondary['tnm'] ? this.dignosisSecondary['tnm'] : "", this.dignosisSecondary['otherStaging'] ? this.dignosisSecondary['otherStaging'] : ""]);
+                    const diagnosisRow = [
+                        this.dignosisSecondary['diagnosis'] || "",
+                        this.dignosisSecondary['type'] || "",
+                        this.dignosisSecondary['tnm'] || "",
+                        this.dignosisSecondary['otherStaging'] || ""
+                    ];
+                    records.push(diagnosisRow);
                 }
                 else if (this.existingDiagnosis.length) {
-                    this.existingDiagnosis.forEach(d => {
-                        records.push([d.diagnosisName, d.diagnosisType, d.diagnosisStatus]);
+                    this.existingDiagnosis.forEach((d) => {
+                        const row = [d.diagnosisName ?? '', d.diagnosisType ?? '', d.diagnosisStatus ?? ''];
+                        records.push(row);
                     });
                 }
                 else {
@@ -1740,8 +1751,9 @@ class LibPresciptionComponent {
                 break;
             case 'medication':
                 if (this.medicines.length) {
-                    this.medicines.forEach(m => {
-                        records.push([m.drug, m.strength, m.days, m.timing, m.frequency, m.remark]);
+                    this.medicines.forEach((m) => {
+                        const row = [m.drug, m.strength, m.days, m.timing, m.frequency, m.remark];
+                        records.push(row);
                     });
                 }
                 else {
@@ -1750,7 +1762,7 @@ class LibPresciptionComponent {
                 break;
             case 'additionalInstruction':
                 if (this.additionalInstructions.length) {
-                    this.additionalInstructions.forEach(ai => {
+                    this.additionalInstructions.forEach((ai) => {
                         records.push({ text: ai.value, margin: [0, 5, 0, 5] });
                     });
                 }
@@ -1760,7 +1772,7 @@ class LibPresciptionComponent {
                 break;
             case 'advice':
                 if (this.advices.length) {
-                    this.advices.forEach(a => {
+                    this.advices.forEach((a) => {
                         records.push({ text: a.value, margin: [0, 5, 0, 5] });
                     });
                 }
@@ -1770,7 +1782,7 @@ class LibPresciptionComponent {
                 break;
             case 'test':
                 if (this.tests.length) {
-                    this.tests.forEach(t => {
+                    this.tests.forEach((t) => {
                         records.push({ text: t.value, margin: [0, 5, 0, 5] });
                     });
                 }
@@ -1783,7 +1795,7 @@ class LibPresciptionComponent {
                 const priorityOfReferral = this.isFeatureAvailable('priorityOfReferral', true);
                 let length = 2;
                 if (this.referrals.length) {
-                    this.referrals.forEach(r => {
+                    this.referrals.forEach((r) => {
                         const referral = [r.speciality];
                         if (referralFacility)
                             referral.push(r.facility);
@@ -1791,7 +1803,6 @@ class LibPresciptionComponent {
                             referral.push(r.priority);
                         referral.push(r.reason ? r.reason : '-');
                         records.push(referral);
-                        length = referral.length;
                     });
                 }
                 else {
@@ -1804,8 +1815,14 @@ class LibPresciptionComponent {
                 break;
             case 'followUp':
                 if (this.followUp) {
-                    records.push([this.followUp.wantFollowUp, (this.isFeatureAvailable('followUpType') ? [this.followUp.followUpType ?? '-'] : []), this.followUp.followUpDate ? moment(this.followUp.followUpDate).format('DD MMM YYYY') : '-',
-                        this.followUp.followUpTime ?? '-', this.followUp.followUpReason ?? '-']);
+                    const followUpRow = [
+                        this.followUp.wantFollowUp,
+                        (this.isFeatureAvailable('followUpType') ? [this.followUp.followUpType ?? '-'] : []),
+                        this.followUp.followUpDate ? moment(this.followUp.followUpDate).format('DD MMM YYYY') : '-',
+                        this.followUp.followUpTime ?? '-',
+                        this.followUp.followUpReason ?? '-'
+                    ];
+                    records.push(followUpRow);
                 }
                 else {
                     records.push([{ text: 'No follow-up added', colSpan: this.isFeatureAvailable('followUpType') ? 5 : 4, alignment: 'center' }]);
@@ -1818,19 +1835,20 @@ class LibPresciptionComponent {
                     });
                 }
                 else if (this.cheifComplaints.length) {
-                    this.cheifComplaints.forEach(cc => {
+                    this.cheifComplaints.forEach((cc) => {
                         records.push({ text: [{ text: cc, bold: true }, ``], margin: [0, 5, 0, 5] });
                     });
                 }
                 break;
             case visitTypes.VITALS:
                 this.vitals.forEach((v) => {
+                    const vitalText = `${v.lang !== null ? this.getLanguageValue(v) : v.name} : ${this.getObsValue(v.uuid, v.key) ? this.getObsValue(v.uuid, v.key) : `No information`}`;
                     records.push({ text: [{ text: `${v.lang !== null ? this.getLanguageValue(v) : v.name} : `, bold: true }, `${this.getObsValue(v.uuid, v.key) ? this.getObsValue(v.uuid, v.key) : `No information`}`], margin: [0, 5, 0, 5] });
                 });
                 break;
             case 'followUpInstructions':
                 if (this.followUpInstructions) {
-                    this.followUpInstructions.forEach(t => {
+                    this.followUpInstructions.forEach((t) => {
                         records.push({ text: t.value, margin: [0, 5, 0, 5] });
                     });
                 }
@@ -1846,35 +1864,11 @@ class LibPresciptionComponent {
                     records.push([{ text: 'No Recommendation added' }]);
                 }
                 break;
+            default:
+                console.warn(`Unknown record type: ${type}`);
         }
         return records;
     }
-    /**
-    * Get image from url as a base64
-    * @param {string} url - Image url
-    * @return {Promise} - Promise containing base64 image
-    */
-    // async toObjectUrl(url: string): Promise<string | null> {
-    //   try {
-    //     const response = await fetch(url, { mode: 'cors' });
-    //     if (!response.ok) {
-    //       throw new Error(`Failed to fetch image: ${response.statusText}`);
-    //     }
-    //     const blob = await response.blob();
-    //     if (!blob.type.startsWith('image/')) {
-    //       throw new Error('Fetched resource is not an image');
-    //     }
-    //     return new Promise((resolve, reject) => {
-    //       const reader = new FileReader();
-    //       reader.onloadend = () => resolve(reader.result as string);
-    //       reader.onerror = () => reject(new Error('Failed to read image'));
-    //       reader.readAsDataURL(blob);
-    //     });
-    //   } catch (error) {
-    //     console.error('Error fetching or processing image:', error);
-    //     return null;
-    //   }
-    // }
     toObjectUrl(url) {
         return fetch(url)
             .then((response) => {
@@ -2183,23 +2177,15 @@ class LibPresciptionComponent {
         return featureList.includes(featureName);
     }
     renderReferralSectionPDF() {
-        const referralFacility = isFeaturePresent('referralFacility', true);
-        const priorityOfReferral = isFeaturePresent('priorityOfReferral', true);
+        const referralFacility = this.isFeatureAvailable('referralFacility', true);
+        const priorityOfReferral = this.isFeatureAvailable('priorityOfReferral', true);
         if (!referralFacility && !priorityOfReferral) {
             return {
                 widths: ['35%', '65%'],
                 headerRows: 1,
                 body: [
-                    // [{ text: 'Referral to', style: 'tableHeader' }, { text: 'Referral for (Reason)', style: 'tableHeader' }],
-                    // ...this.getRecords('referral'),
-                    [
-                        {
-                            colSpan: 2,
-                            ul: [
-                                ...this.getRecords('referral')
-                            ]
-                        }
-                    ]
+                    [{ text: 'Referral to', style: 'tableHeader' }, { text: 'Referral for (Reason)', style: 'tableHeader' }],
+                    ...this.getRecords('referral'),
                 ]
             };
         }
@@ -2255,21 +2241,21 @@ class LibPresciptionComponent {
                         headerRows: 1,
                         body: [
                             [{ image: 'medication', width: 25, height: 25, border: [false, false, false, true] }, { text: 'Medications', style: 'sectionheader', border: [false, false, false, true] }],
-                            // [
-                            //   {
-                            //     colSpan: 2,
-                            //     table: {
-                            //       widths: ['*', 'auto', 'auto', 'auto', 'auto', 'auto'],
-                            //       headerRows: 1,
-                            //       body: [
-                            //         [{text: 'Drug name', style: 'tableHeader'}, {text: 'Strength', style: 'tableHeader'}, {text: 'No. of days', style: 'tableHeader'}, {text: 'Timing', style: 'tableHeader'}, {text: 'Frequency', style: 'tableHeader'}, {text: 'Remarks', style: 'tableHeader'}],
-                            //         ...this.getRecords('medication')
-                            //       ]
-                            //     },
-                            //     layout: 'lightHorizontalLines'
-                            //   }
-                            // ],
-                            // [{ text: 'Additional Instructions:', style: 'sectionheader', colSpan: 2 }, ''],
+                            [
+                                {
+                                    colSpan: 2,
+                                    table: {
+                                        widths: ['*', 'auto', 'auto', 'auto', 'auto', 'auto'],
+                                        headerRows: 1,
+                                        body: [
+                                            [{ text: 'Drug name', style: 'tableHeader' }, { text: 'Strength', style: 'tableHeader' }, { text: 'No. of days', style: 'tableHeader' }, { text: 'Timing', style: 'tableHeader' }, { text: 'Frequency', style: 'tableHeader' }, { text: 'Remarks', style: 'tableHeader' }],
+                                            ...this.getRecords('medication')
+                                        ]
+                                    },
+                                    layout: 'lightHorizontalLines'
+                                }
+                            ],
+                            [{ text: 'Additional Instructions:', style: 'sectionheader', colSpan: 2 }, ''],
                             [
                                 {
                                     colSpan: 2,
@@ -2313,8 +2299,10 @@ class LibPresciptionComponent {
                 '',
                 '',
                 ''
-            ],
-            [
+            ]];
+        // Add follow-up instructions section if feature is available
+        if (this.isFeatureAvailable('follow-up-instruction')) {
+            subFields.push([
                 {
                     colSpan: 4,
                     table: {
@@ -2339,33 +2327,8 @@ class LibPresciptionComponent {
                 '',
                 '',
                 ''
-            ],
-            // [
-            //   {
-            //     colSpan: 4,
-            //     table: {
-            //       widths: [30, '*'],
-            //       headerRows: 1,
-            //       body:  [
-            //         [ {image: 'referral', width: 25, height: 25, border: [false, false, false, true]  }, {text: 'Referral Advise', style: 'sectionheader', border: [false, false, false, true] }],
-            //         [
-            //           {
-            //             colSpan: 2,
-            //             table: this.renderReferralSectionPDF(),
-            //             layout: 'lightHorizontalLines'
-            //           }
-            //         ]
-            //       ]
-            //     },
-            //     layout: {
-            //       defaultBorder: false
-            //     }
-            //   },
-            //   '',
-            //   '',
-            //   ''
-            // ]
-        ];
+            ]);
+        }
         if (this.isFeatureAvailable('doctor-recommendation')) {
             return [
                 [
@@ -2411,431 +2374,373 @@ class LibPresciptionComponent {
         }
         catch (error) {
             console.error('Error generating or downloading PDF:', error);
+            // You might want to show a user-friendly error message here
+            throw error;
         }
     }
     async generatePdf() {
-        const userImg = await this.toObjectUrl(`${this.baseUrl}/personimage/${this.patient?.person.uuid}`);
-        const logo = await this.toObjectUrl(`${this.configPublicURL}${this.logoImageURL}`);
-        const checkUpReasonConfig = this.pvsConfigs.find((v) => v.key === this.pvsConstant['check_up_reason'].key);
-        const vitalsConfig = this.pvsConfigs.find((v) => v.key === this.pvsConstant['vitals'].key);
-        const pdfObj = {
-            pageSize: 'A4',
-            pageOrientation: 'portrait',
-            pageMargins: [20, 50, 20, 40],
-            watermark: { text: 'INTELEHEALTH', color: 'var(--color-gray)', opacity: 0.1, bold: true, italics: false, angle: 0, fontSize: 50 },
-            header: {
-                columns: [
-                    { text: '' },
-                    { image: (logo && !logo?.includes('application/json')) ? logo : 'logo', width: 90, height: 30, alignment: 'right', margin: [0, 10, 10, 0] }
-                ]
-            },
-            footer: (currentPage, pageCount) => {
-                return {
+        try {
+            const userImg = await this.toObjectUrl(`${this.baseUrl}/personimage/${this.patient?.person.uuid}`);
+            const logo = await this.toObjectUrl(`${this.configPublicURL}${this.logoImageURL}`);
+            const checkUpReasonConfig = this.pvsConfigs.find((v) => v.key === this.pvsConstant['check_up_reason'].key);
+            const vitalsConfig = this.pvsConfigs.find((v) => v.key === this.pvsConstant['vitals'].key);
+            const pdfObj = {
+                pageSize: 'A4',
+                pageOrientation: 'portrait',
+                pageMargins: [20, 50, 20, 40],
+                watermark: { text: 'INTELEHEALTH', color: 'var(--color-gray)', opacity: 0.1, bold: true, italics: false, angle: 0, fontSize: 50 },
+                header: {
                     columns: [
-                        [{ text: (pageCount === currentPage ? '*The diagnosis and prescription is through telemedicine consultation conducted as per applicable telemedicine guideline\n\n' : '\n\n'), bold: true, fontSize: 9, margin: [10, 0, 0, 0] }, { text: 'Copyright ©2023 Intelehealth, a 501 (c)(3) & Section 8 non-profit organisation', fontSize: 8, margin: [5, 0, 0, 0] }],
-                        { text: '\n\n' + currentPage.toString() + ' of ' + pageCount, width: "7%", fontSize: 8, margin: [5, 5, 5, 5], alignment: 'right' }
+                        { text: '' },
+                        { image: (logo && !logo?.includes('application/json')) ? logo : 'logo', width: 90, height: 30, alignment: 'right', margin: [0, 10, 10, 0] }
                     ]
-                };
-            },
-            content: [
-                {
-                    style: 'tableExample',
-                    table: {
-                        widths: ['25%', '30%', '22%', '23%'],
-                        body: [
-                            [
-                                {
-                                    colSpan: 4,
-                                    fillColor: '#E6FFF3',
-                                    text: 'Intelehealth e-Prescription',
-                                    alignment: 'center',
-                                    style: 'header'
-                                },
-                                '',
-                                '',
-                                ''
-                            ],
-                            [
-                                {
-                                    colSpan: 4,
-                                    table: {
-                                        widths: ['auto', '*'],
-                                        body: [
-                                            [
-                                                {
-                                                    image: (userImg && !userImg?.includes('application/json')) && this.checkPatientRegField('Profile Photo') ? userImg : 'user',
-                                                    width: 30,
-                                                    height: 30,
-                                                    margin: [0, (userImg && !userImg?.includes('application/json')) ? 15 : 5, 0, 5]
-                                                },
+                },
+                footer: (currentPage, pageCount) => {
+                    return {
+                        columns: [
+                            [{ text: (pageCount === currentPage ? '*The diagnosis and prescription is through telemedicine consultation conducted as per applicable telemedicine guideline\n\n' : '\n\n'), bold: true, fontSize: 9, margin: [10, 0, 0, 0] }, { text: 'Copyright ©2023 Intelehealth, a 501 (c)(3) & Section 8 non-profit organisation', fontSize: 8, margin: [5, 0, 0, 0] }],
+                            { text: '\n\n' + currentPage.toString() + ' of ' + pageCount, width: "7%", fontSize: 8, margin: [5, 5, 5, 5], alignment: 'right' }
+                        ]
+                    };
+                },
+                content: [
+                    {
+                        style: 'tableExample',
+                        table: {
+                            widths: ['25%', '30%', '22%', '23%'],
+                            body: [
+                                [
+                                    {
+                                        colSpan: 4,
+                                        fillColor: '#E6FFF3',
+                                        text: 'Intelehealth e-Prescription',
+                                        alignment: 'center',
+                                        style: 'header'
+                                    },
+                                    '',
+                                    '',
+                                    ''
+                                ],
+                                [
+                                    {
+                                        colSpan: 4,
+                                        table: {
+                                            widths: ['auto', '*'],
+                                            body: [
                                                 [
                                                     {
-                                                        text: `${this.patient?.person?.preferredName?.givenName?.toUpperCase()}` + (this.checkPatientRegField('Middle Name') && this.patient?.person?.preferredName?.middleName ? ' ' + this.patient?.person?.preferredName?.middleName?.toUpperCase() : '') + ` ${this.patient?.person?.preferredName?.familyName?.toUpperCase()}`,
-                                                        bold: true,
-                                                        margin: [10, 10, 0, 5],
+                                                        image: (userImg && !userImg?.includes('application/json')) && this.checkPatientRegField('Profile Photo') ? userImg : 'user',
+                                                        width: 30,
+                                                        height: 30,
+                                                        margin: [0, (userImg && !userImg?.includes('application/json')) ? 15 : 5, 0, 5]
+                                                    },
+                                                    [
+                                                        {
+                                                            text: `${this.patient?.person?.preferredName?.givenName?.toUpperCase()}` + (this.checkPatientRegField('Middle Name') && this.patient?.person?.preferredName?.middleName ? ' ' + this.patient?.person?.preferredName?.middleName?.toUpperCase() : '') + ` ${this.patient?.person?.preferredName?.familyName?.toUpperCase()}`,
+                                                            bold: true,
+                                                            margin: [10, 10, 0, 5],
+                                                        }
+                                                    ]
+                                                ]
+                                            ]
+                                        },
+                                        layout: 'noBorders'
+                                    },
+                                ],
+                                [
+                                    this.getPersonalInfo()
+                                ],
+                                [
+                                    this.getAddress()
+                                ],
+                                [
+                                    this.getOtherInfo()
+                                ],
+                                [
+                                    {
+                                        colSpan: 4,
+                                        sectionName: 'cheifComplaint',
+                                        table: {
+                                            widths: [30, '*'],
+                                            headerRows: 1,
+                                            body: [
+                                                [{ image: 'cheifComplaint', width: 25, height: 25, border: [false, false, false, true] }, { text: this.getLanguageValue(checkUpReasonConfig), style: 'sectionheader', border: [false, false, false, true] }],
+                                                [
+                                                    {
+                                                        colSpan: 2,
+                                                        ul: [
+                                                            ...this.getRecords('cheifComplaint')
+                                                        ]
                                                     }
                                                 ]
                                             ]
-                                        ]
+                                        },
+                                        layout: {
+                                            defaultBorder: false
+                                        }
                                     },
-                                    layout: 'noBorders'
-                                },
-                                // {
-                                //   table: {
-                                //     widths: ['100%'],
-                                //     body: [
-                                //       [
-                                //         [
-                                //           ...this.getPatientRegFieldsForPDF('Gender'),
-                                //           ...this.getPatientRegFieldsForPDF('Age'),
-                                //         ]
-                                //       ]
-                                //     ]
-                                //   },
-                                //   layout: {
-                                //     vLineWidth: function (i, node) {
-                                //       if (i === 0) {
-                                //         return 1;
-                                //       }
-                                //       return 0;
-                                //     },
-                                //     hLineWidth: function (i, node) {
-                                //       return 0;
-                                //     },
-                                //     vLineColor: function (i) {
-                                //       return "lightgray";
-                                //     },
-                                //   }
-                                // },
-                                // {
-                                //   table: {
-                                //     widths: ['100%'],
-                                //     body: [
-                                //       [
-                                //         [
-                                //           ...this.getPatientRegFieldsForPDF('Address'),
-                                //           ...this.getPatientRegFieldsForPDF('Occupation')
-                                //         ]
-                                //       ]
-                                //     ]
-                                //   },
-                                //   layout: {
-                                //     vLineWidth: function (i, node) {
-                                //       if (i === 0) {
-                                //         return 1;
-                                //       }
-                                //       return 0;
-                                //     },
-                                //     hLineWidth: function (i, node) {
-                                //       return 0;
-                                //     },
-                                //     vLineColor: function (i) {
-                                //       return "lightgray";
-                                //     },
-                                //   }
-                                // },
-                                // {
-                                //   table: {
-                                //     widths: ['100%'],
-                                //     body: [
-                                //       [ 
-                                //         [ 
-                                //           ...this.getPatientRegFieldsForPDF('National ID'),
-                                //           ...this.getPatientRegFieldsForPDF('Phone Number'),
-                                //           , {text: ' ', style: 'subheader'}, {text: ' '}
-                                //         ]
-                                //       ],
-                                //     ]
-                                //   },
-                                //   layout: {
-                                //     vLineWidth: function (i, node) {
-                                //       if (i === 0) {
-                                //         return 1;
-                                //       }
-                                //       return 0;
-                                //     },
-                                //     hLineWidth: function (i, node) {
-                                //       return 0;
-                                //     },
-                                //     vLineColor: function (i) {
-                                //       return "lightgray";
-                                //     },
-                                //   }
-                                // }
-                            ],
-                            [
-                                this.getPersonalInfo()
-                            ],
-                            [
-                                this.getAddress()
-                            ],
-                            [
-                                this.getOtherInfo()
-                            ],
-                            [
-                                {
-                                    colSpan: 4,
-                                    sectionName: 'cheifComplaint',
-                                    table: {
-                                        widths: [30, '*'],
-                                        headerRows: 1,
-                                        body: [
-                                            [{ image: 'cheifComplaint', width: 25, height: 25, border: [false, false, false, true] }, { text: this.getLanguageValue(checkUpReasonConfig), style: 'sectionheader', border: [false, false, false, true] }],
-                                            [
-                                                {
-                                                    colSpan: 2,
-                                                    ul: [
-                                                        ...this.getRecords('cheifComplaint')
-                                                    ]
-                                                }
-                                            ]
-                                        ]
-                                    },
-                                    layout: {
-                                        defaultBorder: false
-                                    }
-                                },
-                                '',
-                                '',
-                                ''
-                            ],
-                            [
-                                {
-                                    colSpan: 4,
-                                    sectionName: 'vitals',
-                                    table: {
-                                        widths: [30, '*'],
-                                        headerRows: 1,
-                                        body: [
-                                            [{ image: 'vitals', width: 25, height: 25, border: [false, false, false, true] }, { text: this.getLanguageValue(vitalsConfig), style: 'sectionheader', border: [false, false, false, true] }],
-                                            [
-                                                {
-                                                    colSpan: 2,
-                                                    ul: [
-                                                        ...this.getRecords('Vitals')
-                                                    ]
-                                                }
-                                            ]
-                                        ]
-                                    },
-                                    layout: {
-                                        defaultBorder: false
-                                    }
-                                },
-                                '',
-                                '',
-                                ''
-                            ],
-                            [
-                                {
-                                    colSpan: 4,
-                                    table: {
-                                        widths: [30, '*'],
-                                        headerRows: 1,
-                                        body: [
-                                            [{ image: 'consultation', width: 25, height: 25, border: [false, false, false, true] }, { text: 'Consultation details', style: 'sectionheader', border: [false, false, false, true] }],
-                                            [
-                                                {
-                                                    colSpan: 2,
-                                                    ul: [
-                                                        { text: [{ text: 'Patient ID:', bold: true }, ` ${this.getPersonAttributeValue('TMH Case Number') !== 'NA' ? this.getPersonAttributeValue('TMH Case Number') : this.patient?.identifiers?.[0]?.identifier}`], margin: [0, 5, 0, 5] },
-                                                        { text: [{ text: 'Date of Consultation:', bold: true }, ` ${moment(this.completedEncounter?.encounterDatetime).format('DD MMM yyyy')}`], margin: [0, 5, 0, 5] }
-                                                    ]
-                                                }
-                                            ]
-                                        ]
-                                    },
-                                    layout: {
-                                        defaultBorder: false
-                                    }
-                                },
-                                '',
-                                '',
-                                ''
-                            ],
-                            this.getDiagnosis(),
-                            ...this.getDiscussionSummary(),
-                            [
-                                {
-                                    colSpan: 4,
-                                    sectionName: "advice",
-                                    table: {
-                                        widths: [30, '*'],
-                                        headerRows: 1,
-                                        body: [
-                                            [{ image: 'advice', width: 25, height: 25, border: [false, false, false, true] }, { text: 'Advice', style: 'sectionheader', border: [false, false, false, true] }],
-                                            [
-                                                {
-                                                    colSpan: 2,
-                                                    ul: [
-                                                        ...this.getRecords('advice')
-                                                    ]
-                                                }
-                                            ]
-                                        ]
-                                    },
-                                    layout: {
-                                        defaultBorder: false
-                                    }
-                                },
-                                '',
-                                '',
-                                ''
-                            ],
-                            ...this.getDoctorRecommandation(),
-                            [
-                                {
-                                    colSpan: 4,
-                                    sectionName: "referral",
-                                    table: {
-                                        widths: [30, '*'],
-                                        headerRows: 1,
-                                        body: [
-                                            [{ image: 'referral', width: 25, height: 25, border: [false, false, false, true] }, { text: 'Referral', style: 'sectionheader', border: [false, false, false, true] }],
-                                            [
-                                                {
-                                                    colSpan: 2,
-                                                    table: this.renderReferralSectionPDF(),
-                                                    layout: 'lightHorizontalLines'
-                                                }
-                                            ]
-                                        ]
-                                    },
-                                    layout: {
-                                        defaultBorder: false
-                                    }
-                                },
-                                '',
-                                '',
-                                ''
-                            ],
-                            [
-                                {
-                                    colSpan: 4,
-                                    sectionName: 'visitFollowUp',
-                                    table: {
-                                        widths: [30, '*'],
-                                        headerRows: 1,
-                                        body: [
-                                            [{ image: 'followUp', width: 25, height: 25, border: [false, false, false, true] }, { text: 'Follow-up', style: 'sectionheader', border: [false, false, false, true] }],
-                                            [
-                                                {
-                                                    colSpan: 2,
-                                                    table: {
-                                                        widths: ['*', '*', '*', '*', '*'],
-                                                        headerRows: 1,
-                                                        body: [
-                                                            [{ text: 'Follow-up Requested', style: 'tableHeader' }, (this.isFeatureAvailable('followUpType') ? { text: 'Type', style: 'tableHeader' } : []), { text: 'Date', style: 'tableHeader' }, { text: 'Time', style: 'tableHeader' }, { text: 'Reason', style: 'tableHeader' }],
-                                                            ...this.getRecords('followUp')
+                                    '',
+                                    '',
+                                    ''
+                                ],
+                                [
+                                    {
+                                        colSpan: 4,
+                                        sectionName: 'vitals',
+                                        table: {
+                                            widths: [30, '*'],
+                                            headerRows: 1,
+                                            body: [
+                                                [{ image: 'vitals', width: 25, height: 25, border: [false, false, false, true] }, { text: this.getLanguageValue(vitalsConfig), style: 'sectionheader', border: [false, false, false, true] }],
+                                                [
+                                                    {
+                                                        colSpan: 2,
+                                                        ul: [
+                                                            ...this.getRecords('Vitals')
                                                         ]
-                                                    },
-                                                    layout: 'lightHorizontalLines'
-                                                }
+                                                    }
+                                                ]
                                             ]
+                                        },
+                                        layout: {
+                                            defaultBorder: false
+                                        }
+                                    },
+                                    '',
+                                    '',
+                                    ''
+                                ],
+                                [
+                                    {
+                                        colSpan: 4,
+                                        table: {
+                                            widths: [30, '*'],
+                                            headerRows: 1,
+                                            body: [
+                                                [{ image: 'consultation', width: 25, height: 25, border: [false, false, false, true] }, { text: 'Consultation details', style: 'sectionheader', border: [false, false, false, true] }],
+                                                [
+                                                    {
+                                                        colSpan: 2,
+                                                        ul: [
+                                                            { text: [{ text: 'Patient ID:', bold: true }, ` ${this.getPersonAttributeValue('TMH Case Number') !== 'NA' ? this.getPersonAttributeValue('TMH Case Number') : this.patient?.identifiers?.[0]?.identifier}`], margin: [0, 5, 0, 5] },
+                                                            { text: [{ text: 'Date of Consultation:', bold: true }, ` ${moment(this.completedEncounter?.encounterDatetime).format('DD MMM yyyy')}`], margin: [0, 5, 0, 5] }
+                                                        ]
+                                                    }
+                                                ]
+                                            ]
+                                        },
+                                        layout: {
+                                            defaultBorder: false
+                                        }
+                                    },
+                                    '',
+                                    '',
+                                    ''
+                                ],
+                                this.getDiagnosis(),
+                                ...this.getDiscussionSummary(),
+                                this.isFeatureAvailable('advice') ? [
+                                    {
+                                        colSpan: 4,
+                                        sectionName: "advice",
+                                        table: {
+                                            widths: [30, '*'],
+                                            headerRows: 1,
+                                            body: [
+                                                [{ image: 'advice', width: 25, height: 25, border: [false, false, false, true] }, { text: 'Advice', style: 'sectionheader', border: [false, false, false, true] }],
+                                                [
+                                                    {
+                                                        colSpan: 2,
+                                                        ul: [
+                                                            ...this.getRecords('advice')
+                                                        ]
+                                                    }
+                                                ]
+                                            ]
+                                        },
+                                        layout: {
+                                            defaultBorder: false
+                                        }
+                                    },
+                                    '',
+                                    '',
+                                    ''
+                                ] : [],
+                                ...this.getDoctorRecommandation(),
+                                [
+                                    {
+                                        colSpan: 4,
+                                        sectionName: "referral",
+                                        table: {
+                                            widths: [30, '*'],
+                                            headerRows: 1,
+                                            body: [
+                                                [{ image: 'referral', width: 25, height: 25, border: [false, false, false, true] }, { text: 'Referral', style: 'sectionheader', border: [false, false, false, true] }],
+                                                [
+                                                    {
+                                                        colSpan: 2,
+                                                        table: this.renderReferralSectionPDF(),
+                                                        layout: 'lightHorizontalLines'
+                                                    }
+                                                ]
+                                            ]
+                                        },
+                                        layout: {
+                                            defaultBorder: false
+                                        }
+                                    },
+                                    '',
+                                    '',
+                                    ''
+                                ],
+                                [
+                                    {
+                                        colSpan: 4,
+                                        sectionName: 'visitFollowUp',
+                                        table: {
+                                            widths: [30, '*'],
+                                            headerRows: 1,
+                                            body: [
+                                                [{ image: 'followUp', width: 25, height: 25, border: [false, false, false, true] }, { text: 'Follow-up', style: 'sectionheader', border: [false, false, false, true] }],
+                                                [
+                                                    {
+                                                        colSpan: 2,
+                                                        table: {
+                                                            widths: ['*', '*', '*', '*', '*'],
+                                                            headerRows: 1,
+                                                            body: [
+                                                                [{ text: 'Follow-up Requested', style: 'tableHeader' }, (this.isFeatureAvailable('followUpType') ? { text: 'Type', style: 'tableHeader' } : []), { text: 'Date', style: 'tableHeader' }, { text: 'Time', style: 'tableHeader' }, { text: 'Reason', style: 'tableHeader' }],
+                                                                ...this.getRecords('followUp')
+                                                            ]
+                                                        },
+                                                        layout: 'lightHorizontalLines'
+                                                    }
+                                                ]
+                                            ]
+                                        },
+                                        layout: {
+                                            defaultBorder: false
+                                        }
+                                    },
+                                    '',
+                                    '',
+                                    ''
+                                ],
+                                [
+                                    {
+                                        colSpan: 4,
+                                        alignment: 'right',
+                                        stack: [
+                                            { image: `${this.signature?.value}`, width: 100, height: 100, margin: [0, 5, 0, 5] },
+                                            { text: `Dr. ${this.consultedDoctor?.name}`, margin: [0, -30, 0, 0] },
+                                            { text: `${this.consultedDoctor?.typeOfProfession}` },
+                                            { text: `Registration No. ${this.consultedDoctor?.registrationNumber}` },
                                         ]
                                     },
-                                    layout: {
-                                        defaultBorder: false
-                                    }
-                                },
-                                '',
-                                '',
-                                ''
-                            ],
-                            [
-                                {
-                                    colSpan: 4,
-                                    alignment: 'right',
-                                    stack: [
-                                        { image: `${this.signature?.value}`, width: 100, height: 100, margin: [0, 5, 0, 5] },
-                                        { text: `Dr. ${this.consultedDoctor?.name}`, margin: [0, -30, 0, 0] },
-                                        { text: `${this.consultedDoctor?.typeOfProfession}` },
-                                        { text: `Registration No. ${this.consultedDoctor?.registrationNumber}` },
-                                    ]
-                                },
-                                '',
-                                '',
-                                ''
+                                    '',
+                                    '',
+                                    ''
+                                ]
                             ]
-                        ]
+                        },
+                        layout: 'noBorders'
+                    }
+                ],
+                images: { ...precription, ...logo },
+                styles: {
+                    header: {
+                        fontSize: 14,
+                        bold: true,
+                        margin: [0, 10, 0, 10],
+                        font: 'DmSans'
                     },
-                    layout: 'noBorders'
+                    subheader: {
+                        fontSize: 12,
+                        bold: true,
+                        margin: [0, 2, 0, 2],
+                        font: 'DmSans'
+                    },
+                    subsubheader: {
+                        fontSize: 10,
+                        bold: true,
+                        margin: [0, 2, 0, 2],
+                        font: 'DmSans'
+                    },
+                    pval: {
+                        fontSize: 10,
+                        margin: [0, 2, 0, 2],
+                        font: 'DmSans'
+                    },
+                    tableExample: {
+                        margin: [0, 5, 0, 5],
+                        fontSize: 12,
+                        font: 'DmSans'
+                    },
+                    tableHeader: {
+                        bold: true,
+                        fontSize: 12,
+                        color: 'black',
+                        font: 'DmSans'
+                    },
+                    sectionheader: {
+                        fontSize: 12,
+                        bold: true,
+                        margin: [0, 5, 0, 10],
+                        font: 'DmSans'
+                    }
+                },
+                defaultStyle: {
+                    font: 'DmSans',
+                },
+                fonts: {
+                    DmSans: {
+                        normal: 'DmSans-Regular.ttf',
+                        bold: 'DmSans-Bold.ttf',
+                        italics: 'DmSans-Italic.ttf',
+                        bolditalics: 'DmSans-BoldItalic.ttf'
+                    }
                 }
-            ],
-            images: { ...precription, ...logo },
-            styles: {
-                header: {
-                    fontSize: 14,
-                    bold: true,
-                    margin: [0, 10, 0, 10],
-                    font: 'DmSans'
-                },
-                subheader: {
-                    fontSize: 12,
-                    bold: true,
-                    margin: [0, 2, 0, 2],
-                    font: 'DmSans'
-                },
-                subsubheader: {
-                    fontSize: 10,
-                    bold: true,
-                    margin: [0, 2, 0, 2],
-                    font: 'DmSans'
-                },
-                pval: {
-                    fontSize: 10,
-                    margin: [0, 2, 0, 2],
-                    font: 'DmSans'
-                },
-                tableExample: {
-                    margin: [0, 5, 0, 5],
-                    fontSize: 12,
-                    font: 'DmSans'
-                },
-                tableHeader: {
-                    bold: true,
-                    fontSize: 12,
-                    color: 'black',
-                    font: 'DmSans'
-                },
-                sectionheader: {
-                    fontSize: 12,
-                    bold: true,
-                    margin: [0, 5, 0, 10],
-                    font: 'DmSans'
+            };
+            pdfObj.content[0].table.body = pdfObj.content[0].table.body.filter((section, index) => {
+                // Debug: Log what's being filtered
+                if (section[0] && typeof section[0] === 'object' && section[0].sectionName) {
+                    console.log(`Checking section ${index}: ${section[0].sectionName}`);
                 }
-            },
-            defaultStyle: {
-                font: 'DmSans',
-            },
-            fonts: {
-                DmSans: {
-                    normal: 'DmSans-Regular.ttf',
-                    bold: 'DmSans-Bold.ttf',
-                    italics: 'DmSans-Italic.ttf',
-                    bolditalics: 'DmSans-BoldItalic.ttf'
+                if (!section[0] || typeof section[0] !== 'object' || !section[0].sectionName) {
+                    return true; // Keep rows that don't have a sectionName
                 }
-            }
-        };
-        pdfObj.content[0].table.body = pdfObj.content[0].table.body.filter((section) => {
-            if (!section[0] || typeof section[0] !== 'object' || !section[0].sectionName) {
-                return true; // Keep rows that don't have a sectionName
-            }
-            if (section[0].sectionName === 'vitals' && (!this.hasVitalsEnabled || !vitalsConfig?.is_enabled))
-                return false;
-            if (section[0].sectionName === 'cheifComplaint' && !checkUpReasonConfig?.is_enabled)
-                return false;
-            if (section[0].sectionName === 'followUpInstructions' && !this.isFeatureAvailable('follow-up-instruction'))
-                return false;
-            if (section[0].sectionName === 'visitFollowUp' && !this.isFeatureAvailable('visitFollowUp'))
-                return false;
-            if (section[0].sectionName === 'advice' && !this.isFeatureAvailable('advice'))
-                return false;
-            if (section[0].sectionName === 'referral' && this.brandName)
-                return false;
-            return true;
-        });
-        return pdfObj;
+                if (section[0].sectionName === 'vitals' && (!this.hasVitalsEnabled || !vitalsConfig?.is_enabled)) {
+                    console.log('Filtering out vitals section');
+                    return false;
+                }
+                if (section[0].sectionName === 'cheifComplaint' && !checkUpReasonConfig?.is_enabled) {
+                    console.log('Filtering out cheifComplaint section');
+                    return false;
+                }
+                if (section[0].sectionName === 'followUpInstructions' && !this.isFeatureAvailable('follow-up-instruction')) {
+                    console.log('Filtering out followUpInstructions section');
+                    return false;
+                }
+                if (section[0].sectionName === 'visitFollowUp' && !this.isFeatureAvailable('visitFollowUp')) {
+                    console.log('Filtering out visitFollowUp section');
+                    return false;
+                }
+                if (section[0].sectionName === 'advice' && !this.isFeatureAvailable('advice')) {
+                    console.log('Filtering out advice section');
+                    return false;
+                }
+                if (section[0].sectionName === 'referral' && this.brandName) {
+                    console.log('Filtering out referral section');
+                    return false;
+                }
+                return true;
+            });
+            return pdfObj;
+        }
+        catch (error) {
+            console.error('Error in generatePdf:', error);
+            throw error;
+        }
     }
     getDiscussionSummary() {
         if (!this.isFeatureAvailable('dp_discussion_summary'))
@@ -2904,11 +2809,13 @@ class LibPresciptionComponent {
                                             ],
                                         // Data Rows
                                         ...this.getRecords('diagnosis').map(row => {
+                                            console.log(this.isFeatureAvailable('dp_diagnosis_secondary'), 'row', row?.length, row);
                                             // Ensure each row has the correct number of cells
                                             const paddedRow = [...row];
                                             while (paddedRow.length < (this.isFeatureAvailable('dp_diagnosis_secondary') ? 4 : 3)) {
                                                 paddedRow.push({ text: '' }); // Add empty cells if needed
                                             }
+                                            console.log(paddedRow, 'paddedRow');
                                             return paddedRow;
                                         })
                                     ]
@@ -2967,7 +2874,6 @@ class LibPresciptionService {
     constructor(http, dialog, environment) {
         this.http = http;
         this.dialog = dialog;
-        // this.baseURL = "https://dev.intelehealth.org/openmrs/ws/rest/v1"
         this.baseURL = environment.BASE_URL;
     }
     fetchVisitDetails(uuid, v = "custom:(location:(display),uuid,display,startDatetime,dateCreated,stopDatetime,encounters:(display,uuid,encounterDatetime,encounterType:(display),obs:(display,uuid,value,concept:(uuid,display)),encounterProviders:(display,provider:(uuid,attributes,person:(uuid,display,gender,age)))),patient:(uuid,identifiers:(identifier,identifierType:(name,uuid,display)),attributes,person:(display,gender,age)),attributes)") {

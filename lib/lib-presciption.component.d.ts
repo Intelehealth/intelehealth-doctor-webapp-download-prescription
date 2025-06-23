@@ -271,11 +271,6 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     * @return {any} - Rows
     */
     getRecords(type: string): any[];
-    /**
-    * Get image from url as a base64
-    * @param {string} url - Image url
-    * @return {Promise} - Promise containing base64 image
-    */
     toObjectUrl(url: string): Promise<unknown>;
     ngOnDestroy(): void;
     /**
@@ -358,6 +353,18 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                 image?: undefined;
                 width?: undefined;
                 height?: undefined;
+            })[] | {
+                colSpan: number;
+                table: {
+                    widths: string[];
+                    headerRows: number;
+                    body: any[];
+                };
+                layout: string;
+            }[] | (string | {
+                text: string;
+                style: string;
+                colSpan: number;
             })[] | {
                 colSpan: number;
                 ul: any[];
@@ -446,6 +453,18 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                             image?: undefined;
                             width?: undefined;
                             height?: undefined;
+                        })[] | {
+                            colSpan: number;
+                            table: {
+                                widths: string[];
+                                headerRows: number;
+                                body: any[];
+                            };
+                            layout: string;
+                        }[] | (string | {
+                            text: string;
+                            style: string;
+                            colSpan: number;
                         })[] | {
                             colSpan: number;
                             ul: any[];
