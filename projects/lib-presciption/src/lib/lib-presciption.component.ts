@@ -317,26 +317,28 @@ ngOnInit(): void {
     this.diagnosisService.getObs(this.baseUrl, this.visit.patient.uuid, conceptIds.conceptDiagnosis).subscribe((response: ObsApiResponseModel) => {
       response.results.forEach((obs: ObsModel) => {
         if (obs.encounter.visit.uuid === this.visit.uuid) {
-          if(this.isFeatureAvailable('dp_diagnosis_secondary')){
+          if (this.isFeatureAvailable('dp_diagnosis_secondary')) {
             this.dignosisSecondary = obsParse(obs.value)
+          } else if (obs.value.includes("}")) {
+            let obsData: any = obsParse(obs.value, obs.uuid)
+            this.existingDiagnosis.push({
+              diagnosisName: obsData.diagnosis,
+              diagnosisStatus: obsData.type,
+              uuid: obsData.uuid,
+            });
           } else {
-            if(obs.value.includes("}")){
-              let obsData: any = obsParse(obs.value, obs.uuid)
-              this.existingDiagnosis.push({
-                diagnosisName: obsData.diagnosis,
-                diagnosisStatus: obsData.type,
-                uuid: obsData.uuid,
-              });
-            } else {
-              this.existingDiagnosis.push({
-                diagnosisName: obs.value.split(':')?.[0]?.trim(),
-                diagnosisType: obs.value.split(':')?.[1]?.split('&')?.[0]?.trim(),
-                diagnosisStatus: obs.value.split(':')?.[1]?.split('&')?.[1]?.trim(),
-                uuid: obs.uuid
-              });
+            let obsValues = obs.value.split(':');
+            if (obs.value.includes("::")) {
+              obsValues = obs.value.split("::").pop()?.split(":");
             }
+            const obsValuesOne = obsValues?.[1]?.split('&');
+            this.existingDiagnosis.push({
+              diagnosisName: obsValues?.[0]?.trim() ?? '',
+              diagnosisType: obsValuesOne?.[0]?.trim() ?? '',
+              diagnosisStatus: obsValuesOne?.[1]?.trim() ?? '',
+              uuid: obs.uuid,
+            });
           }
-          
         }
       });
     });
@@ -1783,13 +1785,11 @@ ngOnInit(): void {
                     // Data Rows
                    
                     ...this.getRecords('diagnosis').map(row => {
-                      console.log(this.isFeatureAvailable('dp_diagnosis_secondary'), 'row', row?.length, row);
                       // Ensure each row has the correct number of cells
                       const paddedRow = [...row];
                       while (paddedRow.length < (this.isFeatureAvailable('dp_diagnosis_secondary') ? 4 : 3)) {
                         paddedRow.push({ text: '' }); // Add empty cells if needed
                       }
-                      console.log(paddedRow, 'paddedRow');
                       return paddedRow;
                     })
                   ]
