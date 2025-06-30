@@ -589,7 +589,6 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                     stack: ({
                         image: string;
                         width: number;
-                        height: number;
                         margin: number[];
                         text?: undefined;
                     } | {
@@ -597,12 +596,10 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
                         margin: number[];
                         image?: undefined;
                         width?: undefined;
-                        height?: undefined;
                     } | {
                         text: string;
                         image?: undefined;
                         width?: undefined;
-                        height?: undefined;
                         margin?: undefined;
                     })[];
                 })[])[];
