@@ -393,21 +393,7 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
             fontSize: number;
         };
         header: {
-            columns: ({
-                text: string;
-                image?: undefined;
-                width?: undefined;
-                height?: undefined;
-                alignment?: undefined;
-                margin?: undefined;
-            } | {
-                image: any;
-                width: number;
-                height: number;
-                alignment: string;
-                margin: number[];
-                text?: undefined;
-            })[];
+            columns: any[];
         };
         footer: (currentPage: {
             toString: () => string;

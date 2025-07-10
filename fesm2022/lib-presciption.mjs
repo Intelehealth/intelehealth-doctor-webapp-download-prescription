@@ -2386,11 +2386,15 @@ class LibPresciptionComponent {
             const userImg = await this.toObjectUrl(`${this.baseUrl}/personimage/${this.patient?.person.uuid}`);
             const logo = await this.toObjectUrl(`${this.configPublicURL}${this.logoImageURL}`);
             const checkUpReasonConfig = this.pvsConfigs.find((v) => v.key === this.pvsConstant['check_up_reason'].key);
+            const vitalsConfig = this.pvsConfigs.find((v) => v.key === this.pvsConstant['vitals'].key);
+            let logoImage = { text: '' };
+            if (logo && !logo?.includes('application/json') && !logo?.includes('text/html')) {
+                logoImage = { image: logo, width: 90, height: 30, alignment: 'right', margin: [0, 10, 10, 0] };
+            }
             let signatureValue = this.signature.value;
             if (signatureValue.includes("amazonaws.com")) {
                 signatureValue = await this.toObjectUrl(`${this.signature.value}`);
             }
-            const vitalsConfig = this.pvsConfigs.find((v) => v.key === this.pvsConstant['vitals'].key);
             const pdfObj = {
                 pageSize: 'A4',
                 pageOrientation: 'portrait',
@@ -2399,7 +2403,7 @@ class LibPresciptionComponent {
                 header: {
                     columns: [
                         { text: '' },
-                        { image: (logo && !logo?.includes('application/json')) ? logo : 'logo', width: 90, height: 30, alignment: 'right', margin: [0, 10, 10, 0] }
+                        logoImage
                     ]
                 },
                 footer: (currentPage, pageCount) => {
