@@ -1353,6 +1353,11 @@ ngOnInit(): void {
       
       const vitalsConfig = this.pvsConfigs.find((v) => v.key === this.pvsConstant['vitals'].key); 
 
+      let logoImage: any = { text: ''};
+      if(logo && !logo?.includes('application/json') && !logo?.includes('text/html')){
+        logoImage = { image: logo, width: 90, height: 30, alignment: 'right', margin: [0, 10, 10, 0] };
+      }
+
       let signatureValue = this.signature.value;
       if(signatureValue.includes("amazonaws.com")){
         signatureValue = await this.toObjectUrl(`${this.signature.value}`);
@@ -1366,7 +1371,7 @@ ngOnInit(): void {
         header: {
           columns: [
             { text: ''},
-            { image: (logo && !logo?.includes('application/json')) ? logo : 'logo', width: 90, height: 30, alignment: 'right', margin: [0, 10, 10, 0] }
+            logoImage
           ]
         },
         footer: (currentPage: { toString: () => string; }, pageCount: string) => {
@@ -1513,7 +1518,7 @@ ngOnInit(): void {
                 ],
                 this.getDiagnosis(),
                 ...this.getDiscussionSummary(),
-                this.isFeatureAvailable('advice') ? [
+                ...(this.isFeatureAvailable('advice') ? [[
                   {
                     colSpan: 4,
                     sectionName: "advice",
@@ -1539,7 +1544,7 @@ ngOnInit(): void {
                   '',
                   '',
                   ''
-                ] : [],
+                ]] : []),
                 ...this.getDoctorRecommandation(),
                 [
                   {
