@@ -463,6 +463,15 @@ export interface MedicineModel {
     frequency?: string;
     uuid?: string;
 }
+export interface StandardMedicineModel {
+    drug?: string;
+    dose?: string;
+    durationNo?: string;
+    durationUnit?: string;
+    instructRemark?: string;
+    frequency?: string;
+    uuid?: string;
+}
 export interface PatientHistoryModel {
     title?: string;
     data?: KeyValueModel[];
@@ -618,6 +627,7 @@ export interface PatientVisitSummaryConfigModel {
     dp_call_status: boolean;
     dp_dignosis_secondary: boolean;
     dp_discussion_summary: boolean;
+    standard_medication: boolean;
 }
 export interface PagerdutyList {
     currentPage: number;

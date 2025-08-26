@@ -4,7 +4,7 @@ import { AppConfigService } from '../lib/services/app-config.service';
 import { VisitService } from '../lib/services/visit.service';
 import { DiagnosisService } from '../lib/services/diagnosis.service';
 import { ProfileService } from '../lib/services/profile.service';
-import { DiagnosisModel, EncounterModel, FollowUpDataModel, MedicineModel, ObsModel, PatientModel, PatientVisitSection, ReferralModel, TestModel, VisitAttributeModel, VisitModel, VitalModel } from './model/model';
+import { DiagnosisModel, EncounterModel, FollowUpDataModel, MedicineModel, ObsModel, PatientModel, PatientVisitSection, ReferralModel, TestModel, VisitAttributeModel, VisitModel, VitalModel, StandardMedicineModel } from './model/model';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { EnvConfigService } from './services/env.service';
@@ -73,6 +73,7 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     spokenWithPatient: string;
     notes: ObsModel[];
     medicines: MedicineModel[];
+    standardMedicines: StandardMedicineModel[];
     existingDiagnosis: DiagnosisModel[];
     advices: ObsModel[];
     additionalInstructions: ObsModel[];

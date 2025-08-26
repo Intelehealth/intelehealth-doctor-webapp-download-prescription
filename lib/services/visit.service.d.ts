@@ -150,6 +150,7 @@ export declare class VisitService {
      * @return {Observable<any>}
      */
     postVisitToABDM(baseURLAbha: string, json: any): Observable<any>;
+    formatMedicineDisplay(medicine: string, uuid?: string): object;
     static ɵfac: i0.ɵɵFactoryDeclaration<VisitService, never>;
     static ɵprov: i0.ɵɵInjectableDeclaration<VisitService>;
 }
