@@ -266,4 +266,18 @@ export class VisitService {
     const url = `${baseURLAbha}/abha/post-care-context`
     return this.http.post(url, json);
   }
+
+  formatMedicineDisplay(medicine: string, uuid?: string): object {
+    const splitMed = medicine?.split?.(':');
+    let med: any = {
+      drug: splitMed?.[0] ?? '-',
+      dose: splitMed?.[1] ?? '-'  ,
+      durationNo: splitMed?.[2] ?? '-',
+      durationUnit: splitMed?.[3] ?? '-',
+      instructRemark: splitMed?.[4] ?? '-',
+      frequency: splitMed?.[5] ?? '-'
+    };
+    if (uuid) med.uuid = uuid;
+    return med;
+  }
 }

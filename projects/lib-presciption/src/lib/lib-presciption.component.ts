@@ -7,7 +7,7 @@ import { ProfileService } from '../lib/services/profile.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { DiagnosisModel, EncounterModel, EncounterProviderModel, FollowUpDataModel, MedicineModel, ObsApiResponseModel, ObsModel, PatientHistoryModel, PatientIdentifierModel, PatientModel, PatientRegistrationFieldsModel, PatientVisitSection, PersonAttributeModel, ProviderAttributeModel, ReferralModel, TestModel, VisitAttributeModel, VisitModel, VitalModel } from './model/model';
+import { DiagnosisModel, EncounterModel, EncounterProviderModel, FollowUpDataModel, MedicineModel, ObsApiResponseModel, ObsModel, PatientHistoryModel, PatientIdentifierModel, PatientModel, PatientRegistrationFieldsModel, PatientVisitSection, PersonAttributeModel, ProviderAttributeModel, ReferralModel, TestModel, VisitAttributeModel, VisitModel, VitalModel, StandardMedicineModel } from './model/model';
 import { checkIsEnabled, VISIT_SECTIONS } from './utils/visit-sections';
 import { TranslateService,TranslateModule } from '@ngx-translate/core';
 import moment from 'moment';
@@ -62,6 +62,7 @@ export class LibPresciptionComponent implements OnInit,OnDestroy {
   spokenWithPatient: string = 'No';
   notes: ObsModel[] = [];
   medicines: MedicineModel[] = [];
+  standardMedicines: StandardMedicineModel[] = [];
   existingDiagnosis: DiagnosisModel[] = [];
   advices: ObsModel[] = [];
   additionalInstructions: ObsModel[] = [];
@@ -377,26 +378,27 @@ ngOnInit(): void {
    * @returns {void}
    */
    checkIfMedicationPresent() {
-     this.medicines = [];
-     this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, this.conceptMed).subscribe((response: ObsApiResponseModel) => {
-       response.results.forEach((obs: ObsModel) => {
-         if (obs.encounter.visit.uuid === this.visit.uuid) {
-           if (obs.value.includes(':')) {
-             this.medicines.push({
-               drug: obs.value?.split(':')[0],
-               strength: obs.value?.split(':')[1],
-               days: obs.value?.split(':')[2],
-               timing: obs.value?.split(':')[3],
-               remark: obs.value?.split(':')[4],
-               frequency: obs.value?.split(':')[5] ? obs.value?.split(':')[5] : '',
-               uuid: obs.uuid
-             });
-           } else {
-             this.additionalInstructions.push(obs);
-           }
-         }
-       });
-     });
+    this.medicines = [];
+    this.standardMedicines = [];
+    this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, conceptIds.conceptMed).subscribe((response: ObsApiResponseModel) => {
+      response.results.forEach((obs: ObsModel) => {
+        if (obs.encounter.visit.uuid === this.visit.uuid) {
+          if(this.appConfigService.patient_visit_summary?.standard_medication){
+            this.standardMedicines.push(this.visitService.formatMedicineDisplay(obs.value, obs.uuid));
+          } else {
+            this.medicines.push({
+              drug: obs.value?.split(':')[0],
+              strength: obs.value?.split(':')[1],
+              days: obs.value?.split(':')[2],
+              timing: obs.value?.split(':')[3],
+              remark: obs.value?.split(':')[4],
+              frequency: obs.value?.split(':')[5] ? obs.value?.split(':')[5] : "",
+              uuid: obs.uuid
+            });
+          }
+        }
+      });
+    });
    }
  
    /**
@@ -715,6 +717,16 @@ ngOnInit(): void {
         if (this.medicines.length) {
           this.medicines.forEach((m) => {
             const row = [m.drug, m.strength, m.days, m.timing, m.frequency, m.remark];
+            records.push(row);
+          });
+        } else {
+          records.push([{ text: 'No medicines added', colSpan: 6, alignment: 'center' }]);
+        }
+        break;
+      case 'standardMedication':
+        if (this.standardMedicines.length) {
+          this.standardMedicines.forEach((m) => {
+            const row = [m.drug, m.dose, m.frequency, m.durationNo, m.durationUnit, m.instructRemark];
             records.push(row);
           });
         } else {
@@ -1195,6 +1207,12 @@ ngOnInit(): void {
   }
 
   getDoctorRecommandation(){
+    let medicinesHeaders = [{text: 'Drug name', style: 'tableHeader'}, {text: 'Strength', style: 'tableHeader'}, {text: 'No. of days', style: 'tableHeader'}, {text: 'Timing', style: 'tableHeader'}, {text: 'Frequency', style: 'tableHeader'}, {text: 'Remarks', style: 'tableHeader'}];
+
+    if(this.appConfigService?.patient_visit_summary.standard_medication){
+      medicinesHeaders = [{text: 'Drug name', style: 'tableHeader'}, {text: 'Dose', style: 'tableHeader'}, {text: 'Frequency', style: 'tableHeader'}, {text: 'Duration (number)', style: 'tableHeader'}, {text: 'Duration (units)', style: 'tableHeader'}, {text: 'Instruction(Remarks)', style: 'tableHeader'}];
+    }
+
     let subFields = [[
       {
         colSpan: 4,
@@ -1210,8 +1228,8 @@ ngOnInit(): void {
                   widths: ['*', 'auto', 'auto', 'auto', 'auto', 'auto'],
                   headerRows: 1,
                   body: [
-                    [{text: 'Drug name', style: 'tableHeader'}, {text: 'Strength', style: 'tableHeader'}, {text: 'No. of days', style: 'tableHeader'}, {text: 'Timing', style: 'tableHeader'}, {text: 'Frequency', style: 'tableHeader'}, {text: 'Remarks', style: 'tableHeader'}],
-                    ...this.getRecords('medication')
+                    medicinesHeaders,
+                    ...this.getRecords((this.appConfigService?.patient_visit_summary.standard_medication ? 'standardMedication' : 'medication'))
                   ]
                 },
                 layout: 'lightHorizontalLines'
