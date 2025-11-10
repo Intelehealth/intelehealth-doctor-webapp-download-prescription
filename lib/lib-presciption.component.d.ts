@@ -160,6 +160,11 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     */
     checkIfMedicationPresent(): void;
     /**
+    * Get additional instructions for the visit
+    * @returns {void}
+    */
+    checkIfAdditionalInstructionPresent(): void;
+    /**
     * Get advices for the visit
     * @returns {void}
     */
