@@ -649,7 +649,7 @@
               </div>
               <div class="data-section-content">
                 <div class="table-responsive">
-                  <table class="table" *ngIf="!appConfigService?.standard-medication">
+                  <table class="table" *ngIf="!appConfigService?.patient_visit_summary?.standard_medication">
                     <thead>
                       <tr>
                         <th scope="col">{{'Drug name'|translate}}</th>
@@ -673,7 +673,7 @@
                       </ng-container>
                       <ng-template #noMedicines>
                         <tr>
-                          <td colspan="5" class="text-center">
+                          <td colspan="6" class="text-center">
                            {{'No medicines added' | translate}}
                           </td>
                         </tr>
@@ -692,7 +692,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <ng-container *ngIf="standardMedicines.length; else noMedicines">
+                      <ng-container *ngIf="standardMedicines.length; else noStandardMedicines">
                         <tr *ngFor="let m of standardMedicines; let i = index">
                           <td>{{ m.drug }}</td>
                           <td>{{ m.dose }}</td>
@@ -702,9 +702,9 @@
                           <td>{{ m.instructRemark }}</td>
                         </tr>
                       </ng-container>
-                      <ng-template #noMedicines>
+                      <ng-template #noStandardMedicines>
                         <tr>
-                          <td colspan="5" class="text-center">
+                          <td colspan="6" class="text-center">
                            {{'No medicines added' | translate}}
                           </td>
                         </tr>
