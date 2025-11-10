@@ -1,6 +1,6 @@
 {
   "name": "lib-presciption",
-  "version": "0.0.0-watch+1762766148276",
+  "version": "0.0.3",
   "peerDependencies": {
     "@angular/common": "^16.2.0",
     "@angular/core": "^16.2.0",
