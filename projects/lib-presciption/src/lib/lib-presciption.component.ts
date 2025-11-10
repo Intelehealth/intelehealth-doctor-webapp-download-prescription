@@ -192,6 +192,7 @@ ngOnInit(): void {
                 this.checkIfDiagnosisPresent();
                 this.checkIfNotePresent();
                 this.checkIfMedicationPresent();
+                this.checkIfAdditionalInstructionPresent();
                 this.checkIfAdvicePresent();
                 this.checkIfTestPresent();
                 this.checkIfReferralPresent();
@@ -383,22 +384,46 @@ ngOnInit(): void {
     this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, conceptIds.conceptMed).subscribe((response: ObsApiResponseModel) => {
       response.results.forEach((obs: ObsModel) => {
         if (obs.encounter.visit.uuid === this.visit.uuid) {
-          if(this.appConfigService.patient_visit_summary?.standard_medication){
-            this.standardMedicines.push(this.visitService.formatMedicineDisplay(obs.value, obs.uuid));
-          } else {
-            this.medicines.push({
-              drug: obs.value?.split(':')[0],
-              strength: obs.value?.split(':')[1],
-              days: obs.value?.split(':')[2],
-              timing: obs.value?.split(':')[3],
-              remark: obs.value?.split(':')[4],
-              frequency: obs.value?.split(':')[5] ? obs.value?.split(':')[5] : "",
-              uuid: obs.uuid
-            });
+          if (obs.value.includes(':')) {
+            if(this.appConfigService.patient_visit_summary?.standard_medication){
+              this.standardMedicines.push(this.visitService.formatMedicineDisplay(obs.value, obs.uuid));
+            } else {
+              this.medicines.push({
+                drug: obs.value?.split(':')[0],
+                strength: obs.value?.split(':')[1],
+                days: obs.value?.split(':')[2],
+                timing: obs.value?.split(':')[3],
+                remark: obs.value?.split(':')[4],
+                frequency: obs.value?.split(':')[5] ? obs.value?.split(':')[5] : "",
+                uuid: obs.uuid
+              });
+            }
           }
         }
       });
     });
+   }
+ 
+   /**
+   * Get additional instructions for the visit
+   * @returns {void}
+   */
+   checkIfAdditionalInstructionPresent() {
+     this.additionalInstructions = [];
+     this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, this.conceptAdvice)
+       .subscribe((response: ObsApiResponseModel) => {
+         response.results.forEach((obs: ObsModel) => {
+           if (obs.encounter && obs.encounter.visit.uuid === this.visit.uuid) {
+             if (!obs.value.includes('</a>')) {
+               if (!obs.value.includes(':') || obs.value.split(':').length < 3) {
+                 if (obs.value.length > 20) {
+                   this.additionalInstructions.push(obs);
+                 }
+               }
+             }
+           }
+         });
+       });
    }
  
    /**
@@ -412,7 +437,11 @@ ngOnInit(): void {
          response.results.forEach((obs: ObsModel) => {
            if (obs.encounter && obs.encounter.visit.uuid === this.visit.uuid) {
              if (!obs.value.includes('</a>')) {
-               this.advices.push(obs);
+               // Exclude additional instructions from advices list
+               const isAdditionalInstruction = (!obs.value.includes(':') || obs.value.split(':').length < 3) && obs.value.length > 20;
+               if (!isAdditionalInstruction) {
+                 this.advices.push(obs);
+               }
              }
            }
          });

@@ -721,11 +721,13 @@
                   </li>
                 </ul>
                 <ng-template #noInstuctions>
-                  <tr>
-                    <td colspan="5" class="text-center">
-                     {{'No additional instructions added' | translate}}
-                    </td>
-                  </tr>
+                  <ul class="items-list">
+                    <li>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <span>{{'No additional instructions added' | translate}}</span>
+                      </div>
+                    </li>
+                  </ul>
                 </ng-template>
               </div>
             </div>
