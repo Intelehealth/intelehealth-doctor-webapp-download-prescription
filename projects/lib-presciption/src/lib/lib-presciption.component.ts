@@ -410,19 +410,46 @@ ngOnInit(): void {
    */
    checkIfAdditionalInstructionPresent() {
      this.additionalInstructions = [];
+     console.log('checkIfAdditionalInstructionPresent called - visit.uuid:', this.visit?.uuid);
      this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, this.conceptAdvice)
        .subscribe((response: ObsApiResponseModel) => {
+         console.log('Additional instructions response:', response);
+         console.log('Total advice observations:', response.results?.length);
          response.results.forEach((obs: ObsModel) => {
-           if (obs.encounter && obs.encounter.visit.uuid === this.visit.uuid) {
-             if (!obs.value.includes('</a>')) {
-               if (!obs.value.includes(':') || obs.value.split(':').length < 3) {
-                 if (obs.value.length > 20) {
+           const obsValue = typeof obs.value === 'string' ? obs.value : (obs.value?.display || String(obs.value || ''));
+           console.log('Processing advice observation:', {
+             uuid: obs.uuid,
+             value: obsValue,
+             valueType: typeof obs.value,
+             encounterVisitUuid: obs.encounter?.visit?.uuid,
+             currentVisitUuid: this.visit.uuid,
+             matches: obs.encounter?.visit?.uuid === this.visit.uuid,
+             hasHtmlLink: obsValue.includes('</a>'),
+             hasColon: obsValue.includes(':'),
+             colonParts: obsValue.includes(':') ? obsValue.split(':').length : 0,
+             length: obsValue.length
+           });
+           if (obs.encounter && obs.encounter.visit && obs.encounter.visit.uuid === this.visit.uuid) {
+             if (!obsValue.includes('</a>')) {
+               if (!obsValue.includes(':') || obsValue.split(':').length < 3) {
+                 // Check if this is likely an additional instruction (not a short advice)
+                 // Additional instructions are usually longer and more detailed
+                 if (obsValue.length > 20) {
+                   console.log('Adding as additional instruction:', obs, 'value:', obsValue);
                    this.additionalInstructions.push(obs);
+                 } else {
+                   console.log('Skipping - too short (length <= 20):', obsValue);
                  }
+               } else {
+                 console.log('Skipping - has colon with 3+ parts:', obsValue);
                }
+             } else {
+               console.log('Skipping - contains HTML link:', obsValue);
              }
            }
          });
+         console.log('Final additionalInstructions array:', this.additionalInstructions);
+         console.log('Additional instructions count:', this.additionalInstructions.length);
        });
    }
  
