@@ -82,7 +82,7 @@ export class LibPresciptionComponent implements OnInit,OnDestroy {
   conceptReferral = '605b6f15-8f7a-4c45-b06d-14165f6974be';
   conceptFollow = 'e8caffd6-5d22-41c4-8d6a-bc31a44d0c86';
   conceptFollowUpInstruction = conceptIds.conceptFollowUpInstruction;
-  conceptDiscussionSummary: 'b673cd54-a01d-4d8a-9c07-8fb19bf4982c'
+  conceptDiscussionSummary = 'b673cd54-a01d-4d8a-9c07-8fb19bf4982c';
 
   signaturePicUrl: string = null;
   signatureFile = null;
@@ -508,7 +508,7 @@ ngOnInit(): void {
        response.results.forEach((obs: ObsModel) => {
          if (obs.encounter.visit.uuid === this.visit.uuid) {
            let followUpDate: string, followUpTime: any, followUpReason: any, wantFollowUp: string = 'No', followUpType: string;
-           if (obs.value.includes('Time:')) {
+           if (obs.value.includes('Time:') || obs.value.includes('Remark:')) {
              const result = obs.value.split(',').filter(Boolean);
              const time = result.find((v: string) => v.includes('Time:'))?.split('Time:')?.[1]?.trim();
              const remark = result.find((v: string) => v.includes('Remark:'))?.split('Remark:')?.[1]?.trim();
@@ -814,12 +814,12 @@ ngOnInit(): void {
               this.followUp.wantFollowUp, 
               (this.isFeatureAvailable('followUpType') ? [this.followUp.followUpType ?? '-'] : []), 
               this.followUp.followUpDate ? moment(this.followUp.followUpDate).format('DD MMM YYYY') : '-', 
-              this.followUp.followUpTime ?? '-', 
+              (this.isFeatureAvailable('followUpTime') ? this.followUp.followUpTime ?? '-' : ''),
               this.followUp.followUpReason ?? '-'
             ];
             records.push(followUpRow);
           } else {
-            records.push([{ text: 'No follow-up added', colSpan: this.isFeatureAvailable('followUpType') ? 5 : 4, alignment: 'center' }]);
+            records.push([{ text: 'No follow-up added', colSpan: (this.isFeatureAvailable('followUpType') ? 5 : this.isFeatureAvailable('followUpTime') ? 4 : 3), alignment: 'center' }]);
           }
           break;
       case 'cheifComplaint':
@@ -1636,7 +1636,7 @@ ngOnInit(): void {
                               widths:['*', '*', '*', '*', '*'],
                               headerRows: 1,
                               body: [
-                                [{text: 'Follow-up Requested', style: 'tableHeader'}, (this.isFeatureAvailable('followUpType') ? {text: 'Type', style: 'tableHeader'} : []), {text: 'Date', style: 'tableHeader'}, {text: 'Time', style: 'tableHeader'}, {text: 'Reason', style: 'tableHeader'}],
+                              [{text: 'Follow-up Requested', style: 'tableHeader'}, (this.isFeatureAvailable('followUpType') ? {text: 'Type', style: 'tableHeader'} : []), {text: 'Date', style: 'tableHeader'}, (this.isFeatureAvailable('followUpTime') ? {text: 'Time', style: 'tableHeader'} : []), {text: 'Reason', style: 'tableHeader'}],
                                 ...this.getRecords('followUp')
                               ]
                             },
