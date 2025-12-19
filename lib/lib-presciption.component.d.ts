@@ -92,7 +92,7 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     conceptReferral: string;
     conceptFollow: string;
     conceptFollowUpInstruction: string;
-    conceptDiscussionSummary: 'b673cd54-a01d-4d8a-9c07-8fb19bf4982c';
+    conceptDiscussionSummary: string;
     signaturePicUrl: string;
     signatureFile: any;
     cheifComplaints: string[];
