@@ -11,7 +11,7 @@ import { DiagnosisModel, EncounterModel, EncounterProviderModel, FollowUpDataMod
 import { checkIsEnabled, VISIT_SECTIONS } from './utils/visit-sections';
 import { TranslateService,TranslateModule } from '@ngx-translate/core';
 import moment from 'moment';
-import { calculateBMI, getFieldValueByLanguage,obsParse } from './utils/utility-functions';
+import { calculateBMI, convertCelsiusToFahrenheit, getFieldValueByLanguage,obsParse } from './utils/utility-functions';
 import { conceptIds, doctorDetails, visitTypes } from './config/constant';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import * as pdfMake from 'pdfmake/build/pdfmake';
@@ -882,15 +882,21 @@ ngOnInit(): void {
   }
  
   /**
- * Get vital value for a given vital uuid
- * @param {string} uuid - Vital uuid
- * @return {any} - Obs value
- */
+  * Get vital value for a given vital uuid
+  * @param {string} uuid - Vital uuid
+  * @param {string} key - Optional vital key (e.g., 'bmi', 'temp_f')
+  * @return {any} - Obs value
+  */
   getObsValue(uuid: string, key?: string): any {
     const v = this.vitalObs.find(e => e.concept.uuid === uuid);
-    const value = v?.value ? ( typeof v.value == 'object') ? v.value?.display : v.value : null;
+    let value = v?.value ? ( typeof v.value == 'object') ? v.value?.display : v.value : null;
     if(!value && key === 'bmi') {
-    return calculateBMI(this.vitals, this.vitalObs);
+      return calculateBMI(this.vitals, this.vitalObs);
+    }
+    // Convert temperature from Celsius to Fahrenheit if key contains 'temp'
+    if (value && key && key.toLowerCase().includes('temp')) {
+      const convertedValue = convertCelsiusToFahrenheit(parseFloat(value));
+      return convertedValue !== null ? convertedValue : value;
     }
     return value
   }
