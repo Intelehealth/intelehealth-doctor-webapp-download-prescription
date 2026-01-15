@@ -280,10 +280,11 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     toObjectUrl(url: string): Promise<unknown>;
     ngOnDestroy(): void;
     /**
-   * Get vital value for a given vital uuid
-   * @param {string} uuid - Vital uuid
-   * @return {any} - Obs value
-   */
+    * Get vital value for a given vital uuid
+    * @param {string} uuid - Vital uuid
+    * @param {string} key - Optional vital key (e.g., 'bmi', 'temp_f')
+    * @return {any} - Obs value
+    */
     getObsValue(uuid: string, key?: string): any;
     checkPatientRegField(fieldName: string): boolean;
     get shouldShowProfilePhoto(): boolean;

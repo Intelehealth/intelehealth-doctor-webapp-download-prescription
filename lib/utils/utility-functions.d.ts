@@ -40,6 +40,13 @@ interface Element {
 }
 export declare function getFieldValueByLanguage(element: Element | null | undefined): string;
 export declare function calculateBMI(vitals: any, vitalObs: any, _locale?: string): string;
+/**
+ * Convert Celsius to Fahrenheit
+ * @param {number} celsius - Temperature in Celsius
+ * @param {string} _locale - Locale for number formatting (default: 'en')
+ * @return {string|null} - Temperature in Fahrenheit formatted to 1 decimal place
+ */
+export declare function convertCelsiusToFahrenheit(celsius: number, _locale?: string): string | null;
 export declare function getCallDuration(given_seconds: number): string;
 export declare function autoGrowTextZone(e: any): void;
 export declare function autoGrowAllTextAreaZone(e: HTMLTextAreaElement[]): void;
