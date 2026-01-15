@@ -1,5 +1,4 @@
 import { languages, visitTypes } from "../config/constant";
-// import * as moment from 'moment';
 import moment from 'moment';
 import { ProviderAttributeModel } from "../model/model";
 import { DecimalPipe } from "@angular/common";

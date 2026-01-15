@@ -23,6 +23,7 @@
       "dom",
       "dom.iterable"
     ],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true
   }
 }
