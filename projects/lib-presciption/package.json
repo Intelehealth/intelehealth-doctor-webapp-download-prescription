@@ -1,6 +1,9 @@
 {
   "name": "lib-presciption",
-  "version": "0.0.17",
+  "version": "0.0.18",
+  "scripts": {
+    "lib-presciption": "ng build lib-presciption --configuration production"
+  },
   "peerDependencies": {
     "@angular/common": "^16.2.0",
     "@angular/core": "^16.2.0",

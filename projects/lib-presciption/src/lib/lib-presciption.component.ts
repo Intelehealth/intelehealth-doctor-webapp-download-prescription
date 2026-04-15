@@ -11,7 +11,7 @@ import { DiagnosisModel, EncounterModel, EncounterProviderModel, FollowUpDataMod
 import { checkIsEnabled, VISIT_SECTIONS } from './utils/visit-sections';
 import { TranslateService,TranslateModule } from '@ngx-translate/core';
 import moment from 'moment';
-import { calculateBMI, convertCelsiusToFahrenheit, getFieldValueByLanguage,obsParse } from './utils/utility-functions';
+import { calculateBMI, getAge, convertCelsiusToFahrenheit, getFieldValueByLanguage,obsParse } from './utils/utility-functions';
 import { conceptIds, doctorDetails, visitTypes } from './config/constant';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import * as pdfMake from 'pdfmake/build/pdfmake';
@@ -583,18 +583,9 @@ ngOnInit(): void {
    * @param {string} birthdate - Birthdate
    * @return {string} - Age
    */
-   getAge(birthdate: string) {
-     const years = moment().diff(birthdate, 'years');
-     const months = moment().diff(birthdate, 'months');
-     const days = moment().diff(birthdate, 'days');
-     if (years > 1) {
-       return `${years} years`;
-     } else if (months > 1) {
-       return `${months} months`;
-     } else {
-       return `${days} days`;
-     }
-   }
+  getAge(birthdate: string, short = false): string {
+    return getAge(birthdate, this.translateService, short);
+  }
  
    /**
    * Get person attribute value for a given attribute type
@@ -938,7 +929,7 @@ ngOnInit(): void {
           value = this.patient?.person.gender == 'M' ? 'Male' : 'Female';
           break;
         case 'Age':
-          value = this.patient?.person.age + ' years';
+          value = this.getAge(this.patient?.person.birthdate);
           break;
         case 'Date of Birth':
           value = new Date(this.patient?.person.birthdate).toDateString();
