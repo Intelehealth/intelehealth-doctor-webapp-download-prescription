@@ -47,6 +47,9 @@ export declare function calculateBMI(vitals: any, vitalObs: any, _locale?: strin
  * @return {string|null} - Temperature in Fahrenheit formatted to 1 decimal place
  */
 export declare function convertCelsiusToFahrenheit(celsius: number, _locale?: string): string | null;
+export declare function getAge(birthdate: string, translateService?: {
+    instant: (key: string) => string;
+}, short?: boolean): string;
 export declare function getCallDuration(given_seconds: number): string;
 export declare function autoGrowTextZone(e: any): void;
 export declare function autoGrowAllTextAreaZone(e: HTMLTextAreaElement[]): void;

@@ -213,7 +213,7 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     * @param {string} birthdate - Birthdate
     * @return {string} - Age
     */
-    getAge(birthdate: string): string;
+    getAge(birthdate: string, short?: boolean): string;
     /**
     * Get person attribute value for a given attribute type
     * @param {str'} attrType - Person attribute type
