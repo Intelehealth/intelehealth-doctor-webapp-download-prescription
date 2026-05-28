@@ -236,6 +236,7 @@ export interface CustomVisitModel {
         uuid?: string;
         person_attribute?: any[];
     };
+    prescription_started?: any;
 }
 export interface CustomEncounterModel {
     encounter_datetime: string;
@@ -432,6 +433,7 @@ export interface VisitModel {
     prescription_sent?: string;
     visitUploadTime?: string;
     dateCreated?: string;
+    demarcation?: string;
 }
 export interface VisitAttributeModel {
     uuid: string;
@@ -471,6 +473,17 @@ export interface StandardMedicineModel {
     instructRemark?: string;
     frequency?: string;
     uuid?: string;
+    aiGenerated?: boolean;
+    modified?: boolean;
+    rationale?: string[];
+    likelihood?: string;
+    originalAiData?: {
+        dose?: string;
+        durationNo?: string;
+        durationUnit?: string;
+        instructRemark?: string;
+        frequency?: string;
+    };
 }
 export interface PatientHistoryModel {
     title?: string;
@@ -485,7 +498,12 @@ export interface DiagnosisModel {
     diagnosisType?: string;
     diagnosisStatus?: string;
     uuid?: string;
-    diagnosisTNMStaging?: string;
+    diagnosisCode?: string;
+    isSnomed?: boolean;
+    diagnosisAiGenerated?: string;
+    rationale?: string[];
+    from?: string;
+    likelihood?: string;
 }
 export interface DocImagesModel {
     src: string;
@@ -602,6 +620,7 @@ export interface WebrtcDataModel {
 export interface WebRTCConfigModel {
     chat: boolean;
     video_call: boolean;
+    audio_call: boolean;
 }
 export interface PatientVisitSummaryModel {
     id?: number;
@@ -610,7 +629,17 @@ export interface PatientVisitSummaryModel {
     createdAt?: string;
     updatedAt?: string;
 }
+export interface PrescriptionNotesModel {
+    id: number;
+    specialty: string;
+    notes: string[];
+    is_enabled: boolean;
+    platform?: 'Mobile' | 'Webapp' | 'Both' | null;
+    createdAt?: string;
+    updatedAt?: string;
+}
 export interface PatientVisitSummaryConfigModel {
+    allow_duplicate_phoneno_and_email: boolean;
     appointment_button: boolean;
     attachment_section: boolean;
     doctor_specialty_section: boolean;
@@ -624,9 +653,15 @@ export interface PatientVisitSummaryConfigModel {
     awaiting_visits_patient_type_demarcation: boolean;
     awaiting_visit_section: boolean;
     diagnosis_at_secondary_level: boolean;
+    dp_recommendation_group: boolean;
     dp_call_status: boolean;
     dp_dignosis_secondary: boolean;
+    dp_medication_secondary: boolean;
+    dp_investigations_secondary: boolean;
+    dp_referral_secondary: boolean;
     dp_discussion_summary: boolean;
+    inprogress_visit_section: boolean;
+    diagnosis_snomedct: boolean;
     standard_medication: boolean;
 }
 export interface PagerdutyList {
@@ -690,4 +725,58 @@ export interface PatientVisitDropdownFieldsModel {
     name?: string;
     is_enabled: boolean;
     updatedAt: string;
+}
+export interface DropdownItemModel {
+    id: number;
+    is_enabled: boolean;
+    key: string;
+    name: string;
+}
+export interface DropdownValuesModel {
+    advice: DropdownItemModel[];
+    diagnosis: DropdownItemModel[];
+    medication: DropdownItemModel[];
+    refer_specialisation: DropdownItemModel[];
+    referral_facility: DropdownItemModel[];
+    test: DropdownItemModel[];
+}
+export interface RecordingResponse {
+    recordingId: number;
+}
+export interface ScreeningResult {
+    confidence_score: number;
+    condition: string;
+    description: string;
+    condition_detected: string;
+    type?: string;
+}
+export interface LungData {
+    lung_bpm: string;
+    location: string;
+    position: string;
+    point?: number;
+    report_url: string;
+    recorded_time?: string;
+    device?: string;
+    screening_results: ScreeningResult[];
+}
+export interface HeartData {
+    heart_bpm: number | string;
+    breathing_rate?: number | string;
+    location: string;
+    position: string;
+    point?: number;
+    report_url: string;
+    recorded_time?: string;
+    device?: string;
+    screening_results: ScreeningResult[];
+}
+export interface DetectedCondition {
+    condition: string;
+    confidence: number;
+}
+export interface MeasurementPoint {
+    id: number;
+    top: string;
+    left: string;
 }

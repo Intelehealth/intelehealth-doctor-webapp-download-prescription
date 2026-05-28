@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { LanguageModel, PatientRegistrationFieldsConfigModel, VitalModel, SpecializationModel, WebRTCConfigModel, PatientVisitSummaryConfigModel, PatientVisitSection } from './../model/model';
+import { Observable } from 'rxjs';
+import { LanguageModel, PatientRegistrationFieldsConfigModel, VitalModel, SpecializationModel, WebRTCConfigModel, PatientVisitSummaryConfigModel, PatientVisitSection, DropdownValuesModel } from './../model/model';
 import { EnvConfigService } from './env.service';
 import * as i0 from "@angular/core";
 export declare class AppConfigService {
@@ -14,6 +15,8 @@ export declare class AppConfigService {
     theme_config: any[];
     patient_vitals: VitalModel[];
     patient_diagnostics: any[];
+    digital_stethoscope: any[];
+    digital_stethoscope_section: boolean;
     webrtc_section: boolean;
     webrtc: WebRTCConfigModel;
     patient_visit_summary: PatientVisitSummaryConfigModel;
@@ -25,12 +28,23 @@ export declare class AppConfigService {
         [key: string]: boolean;
     };
     patient_visit_sections: PatientVisitSection[];
+    dropdown_values: DropdownValuesModel[];
+    patient_diagnostics_section: boolean;
+    ai_llm_section: boolean;
+    ai_llm_recording_section: boolean;
+    prescription_notes_section: boolean;
+    prescription_notes: {
+        specialty: string;
+        notes: string[];
+        is_enabled: boolean;
+    }[];
     constructor(http: HttpClient, envService: EnvConfigService);
     load(): Promise<any>;
     setPatientVisitSections(data: any): void;
     get tourConfig(): any;
     get patientRegFields(): any[];
     checkPatientRegField(fieldName: any, fields: string | any[]): boolean;
+    fetchAllLanguage(): Observable<any>;
     static ɵfac: i0.ɵɵFactoryDeclaration<AppConfigService, never>;
     static ɵprov: i0.ɵɵInjectableDeclaration<AppConfigService>;
 }

@@ -723,6 +723,13 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
         table?: undefined;
         layout?: undefined;
     })[];
+    /**
+     * Returns specialty-specific prescription notes for the consulted doctor.
+     * Falls back to General Physician if the doctor's specialty is disabled or unmatched.
+     * Returns [] when the section is disabled or no notes are published.
+      * @return {string[]}
+      */
+    get specialtyNotes(): string[];
     static ɵfac: i0.ɵɵFactoryDeclaration<LibPresciptionComponent, never>;
     static ɵcmp: i0.ɵɵComponentDeclaration<LibPresciptionComponent, "lib-presciption", never, { "isDownloadPrescription": "isDownloadPrescription"; "visitId": "visitId"; "download": "download"; }, {}, never, never, true>;
 }
