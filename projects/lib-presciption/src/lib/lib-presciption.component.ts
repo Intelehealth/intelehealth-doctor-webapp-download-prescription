@@ -845,6 +845,11 @@ ngOnInit(): void {
           records.push([{ text: 'No Recommendation added'}]);
         }
         break;
+      case 'specialtyNotes':
+        this.specialtyNotes.forEach(note => {
+          records.push({ text: this.translateService.instant(note), margin: [0, 3, 0, 3] });
+        });
+        break;
       default:
         console.warn(`Unknown record type: ${type}`);
     }
@@ -1653,6 +1658,33 @@ ngOnInit(): void {
                 [
                   {
                     colSpan: 4,
+                    sectionName: 'specialtyNotes',
+                    table: {
+                      widths: [30, '*'],
+                      headerRows: 1,
+                      body: [
+                        [ {image: 'advice', width: 25, height: 25, border: [false, false, false, true] }, {text: 'Notes & Precautions', style: 'sectionheader', border: [false, false, false, true] }],
+                        [
+                          {
+                            colSpan: 2,
+                            ul: [
+                              ...this.getRecords('specialtyNotes')
+                            ]
+                          }
+                        ]
+                      ]
+                    },
+                    layout: {
+                      defaultBorder: false
+                    }
+                  },
+                  '',
+                  '',
+                  ''
+                ],
+                [
+                  {
+                    colSpan: 4,
                     alignment: 'right',
                     stack: [
                       { image: `${signatureValue}`, width: 100, margin: [0, 5, 0, 5] },
@@ -1761,6 +1793,9 @@ ngOnInit(): void {
           console.log('Filtering out referral section');
           return false;
         }
+        if(section[0].sectionName === 'specialtyNotes' && !this.specialtyNotes?.length) {
+          return false;
+        }
         return true;
       });
 
@@ -1862,6 +1897,34 @@ ngOnInit(): void {
       { },
       { } 
     ];
+  }
+
+/**
+ * Returns specialty-specific prescription notes for the consulted doctor.
+ * Falls back to General Physician if the doctor's specialty is disabled or unmatched.
+ * Returns [] when the section is disabled or no notes are published.
+  * @return {string[]}
+  */
+  get specialtyNotes(): string[] {
+    if (this.appConfigService.prescription_notes_section === false) {
+      return [];
+    }
+
+    const rows = this.appConfigService.prescription_notes;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return [];
+    }
+
+    const enabled = rows.filter(r => Boolean(r.is_enabled));
+    if (!enabled.length) {
+      return [];
+    }
+
+    const specialty = (this.consultedDoctor?.specialization || '').trim();
+    const match = specialty
+      ? enabled.find(r => r.specialty?.toLowerCase() === specialty.toLowerCase())
+      : null;
+    return match ? match.notes || [] : [];
   }
 }
  

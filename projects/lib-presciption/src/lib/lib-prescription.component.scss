@@ -303,3 +303,17 @@
 .data-section-content li span{
   white-space: break-spaces;
 }
+
+.prescription-notes-section {
+  .prescription-notes-list {
+    padding: 16px 0 0 24px;
+    list-style: disc;
+
+    li {
+      margin-bottom: 8px;
+      color: var(--color-darkestBlue);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+  }
+}

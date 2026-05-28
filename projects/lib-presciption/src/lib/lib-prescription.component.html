@@ -893,6 +893,24 @@
             </div>
           </div>
         </div>
+
+        <div class="col-md-12 px-3 mb-3" *ngIf="specialtyNotes?.length">
+          <div class="data-section prescription-notes-section">
+            <div class="data-section-title">
+              <img src="assets/svgs/note.svg" alt="" />
+              <h6>{{'Notes & Precautions'|translate}}</h6>
+            </div>
+            <div class="data-section-content">
+              <ul class="items-list prescription-notes-list">
+                <li *ngFor="let note of specialtyNotes">
+                  <div class="d-flex align-items-start">
+                    <span>{{ note | translate }}</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div *ngIf="isDownloadPrescription" class="signature w-100">

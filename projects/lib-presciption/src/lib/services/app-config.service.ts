@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 // import { environment } from "../../environments/environment";
-import { LanguageModel, PatientRegistrationFieldsConfigModel, VitalModel, SpecializationModel, WebRTCConfigModel, PatientVisitSummaryConfigModel, PatientVisitSection } from './../model/model';
-import { EnvConfigService } from './env.service' 
+import { LanguageModel, PatientRegistrationFieldsConfigModel, VitalModel, SpecializationModel, WebRTCConfigModel, PatientVisitSummaryConfigModel, PatientVisitSection, DropdownValuesModel } from './../model/model';
+import { EnvConfigService } from './env.service'; 
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +20,8 @@ export class AppConfigService {
   public theme_config: any[];
   public patient_vitals: VitalModel[];
   public patient_diagnostics:any[];
+  public digital_stethoscope:any[];
+  public digital_stethoscope_section: boolean;
   public webrtc_section: boolean;
   public webrtc: WebRTCConfigModel;
   public patient_visit_summary: PatientVisitSummaryConfigModel;
@@ -28,13 +31,19 @@ export class AppConfigService {
   public abha_section: boolean;
   public sidebar_menus: { [key: string]: boolean };
   public patient_visit_sections: PatientVisitSection[]
+  public dropdown_values: DropdownValuesModel[]
+  public patient_diagnostics_section: boolean;
+  public ai_llm_section: boolean;
+  public ai_llm_recording_section:  boolean;
+  public prescription_notes_section: boolean;
+  public prescription_notes: { specialty: string; notes: string[]; is_enabled: boolean }[];
 
   constructor(private http: HttpClient,private envService: EnvConfigService) {
     this.baseURL = this.envService.getConfig('configURL'); 
    }
 
   load(): Promise<any> {
-    const promise = this.http.get(`${this.baseURL}/config/getPublishedConfig`)
+    const promise = this.http.get(`${this.baseURL}/config/getPublishedConfig?ngsw-bypass=true`)
       .toPromise()
       .then((data) => {
         this.setPatientVisitSections(data)
@@ -77,5 +86,8 @@ export class AppConfigService {
     return fields.indexOf(fieldName) !== -1;
   }
 
+  fetchAllLanguage(): Observable<any> {
+    return this.http.get<any>(`${this.baseURL}/language/getallEnabledLanguages`);
+  } 
 }
     

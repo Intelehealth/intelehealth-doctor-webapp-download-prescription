@@ -1,6 +1,6 @@
 {
   "name": "lib-presciption",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "scripts": {
     "lib-presciption": "ng build lib-presciption --configuration production"
   },
