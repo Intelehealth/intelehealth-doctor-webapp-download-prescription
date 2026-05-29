@@ -1,6 +1,6 @@
 {
   "name": "lib-presciption",
-  "version": "0.0.19",
+  "version": "0.2.1",
   "peerDependencies": {
     "@angular/common": "^16.2.0",
     "@angular/core": "^16.2.0",

@@ -2949,7 +2949,7 @@ class LibPresciptionComponent {
         }
         const specialty = (this.consultedDoctor?.specialization || '').trim();
         const match = specialty
-            ? enabled.find(r => r.specialty?.toLowerCase() === specialty.toLowerCase())
+            ? enabled.find(r => r.specialty?.toLowerCase() === specialty.toLowerCase() || specialty?.toLowerCase().includes(r.specialty.toLowerCase()))
             : null;
         return match ? match.notes || [] : [];
     }
