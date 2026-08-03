@@ -410,13 +410,13 @@ ngOnInit(): void {
    */
    checkIfAdditionalInstructionPresent() {
      this.additionalInstructions = [];
-     this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, this.conceptAdvice)
+     this.diagnosisService.getObs(this.baseUrl,this.visit.patient.uuid, this.conceptMed)
        .subscribe((response: ObsApiResponseModel) => {
          response.results.forEach((obs: ObsModel) => {
            const obsValue = typeof obs.value === 'string' ? obs.value : (obs.value?.display || String(obs.value || ''));
            if (obs.encounter && obs.encounter.visit && obs.encounter.visit.uuid === this.visit.uuid) {
              if (!obsValue.includes('</a>')) {
-               if (!obsValue.includes(':') || obsValue.split(':').length < 3) {
+               if (!obsValue.includes(':')) {
                  this.additionalInstructions.push(obs);
                } 
              } else {
@@ -439,10 +439,10 @@ ngOnInit(): void {
            if (obs.encounter && obs.encounter.visit.uuid === this.visit.uuid) {
              if (!obs.value.includes('</a>')) {
                // Exclude additional instructions from advices list
-               const isAdditionalInstruction = (!obs.value.includes(':') || obs.value.split(':').length < 3) && obs.value.length > 20;
-               if (!isAdditionalInstruction) {
+              //  const isAdditionalInstruction = (!obs.value.includes(':') || obs.value.split(':').length < 3) && obs.value.length > 20;
+              //  if (!isAdditionalInstruction) {
                  this.advices.push(obs);
-               }
+               //}
              }
            }
          });
