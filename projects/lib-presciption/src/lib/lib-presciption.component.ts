@@ -184,6 +184,7 @@ ngOnInit(): void {
             if (patient) {
               this.patient = patient;
               this.clinicName = visit.location.display;
+              this.getAbhaDetails(patient);
               this.getVisitProvider(visit.encounters);
               // check if visit note exists for this visit
               this.visitNotePresent = this.checkIfEncounterExists(visit.encounters, visitTypes.VISIT_NOTE);
@@ -548,7 +549,17 @@ ngOnInit(): void {
      }
      return identifier;
    }
- 
+
+   /**
+    * Get Abha number / Abha address from patient identifiers
+    * @param {PatientModel} _patient - Patient
+    * @returns {void}
+    */
+   getAbhaDetails(_patient: PatientModel): void {
+     this.patient.person.abhaNumber = _patient.identifiers.find((v) => v.identifierType?.display?.toLowerCase() === 'abha number')?.identifier;
+     this.patient.person.abhaAddress = _patient.identifiers.find((v) => v.identifierType?.display?.toLowerCase() === 'abha address')?.identifier;
+   }
+
    /**
    * Check visit status
    * @param {EncounterModel[]} encounters - Array of encounters
@@ -970,6 +981,24 @@ ngOnInit(): void {
             { text: value, style: 'pval' }
           ]
         });
+      }
+      if (e.name === 'Phone Number') {
+        if (this.appConfigService?.abha_section && this.patient?.person?.abhaNumber) {
+          other.push({
+            stack: [
+              { text: 'ABHA Number', style: 'subsubheader' },
+              { text: this.patient.person.abhaNumber, style: 'pval' }
+            ]
+          });
+        }
+        if (this.appConfigService?.abha_section && this.patient?.person?.abhaAddress) {
+          other.push({
+            stack: [
+              { text: 'ABHA Address', style: 'subsubheader' },
+              { text: this.patient.person.abhaAddress, style: 'pval' }
+            ]
+          });
+        }
       }
     });
     const chunkSize = 4;
