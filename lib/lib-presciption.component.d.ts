@@ -196,6 +196,12 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     */
     getPatientIdentifier(identifierType: string): string;
     /**
+     * Get Abha number / Abha address from patient identifiers
+     * @param {PatientModel} _patient - Patient
+     * @returns {void}
+     */
+    getAbhaDetails(_patient: PatientModel): void;
+    /**
     * Check visit status
     * @param {EncounterModel[]} encounters - Array of encounters
     * @return {void}

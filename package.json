@@ -1,11 +1,12 @@
 {
   "name": "lib-presciption",
-  "version": "0.2.2",
+  "version": "1.2.3",
   "peerDependencies": {
+    "@angular/animations": "^16.2.0",
     "@angular/common": "^16.2.0",
     "@angular/core": "^16.2.0",
     "@angular/forms": "^16.2.0",
-    "@angular/material": "^19.1.4",
+    "@angular/material": "^16.2.0",
     "@angular/platform-browser": "^16.2.0",
     "@angular/platform-browser-dynamic": "^16.2.0",
     "@angular/router": "^16.2.0",
@@ -14,7 +15,7 @@
     "pdfmake": "^0.2.7"
   },
   "dependencies": {
-    "ng-packagr": "^19.1.2",
+    "ng-packagr": "^16.2.0",
     "tslib": "^2.3.0"
   },
   "sideEffects": false,
