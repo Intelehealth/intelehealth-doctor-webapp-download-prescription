@@ -1,4 +1,4 @@
-import { ProviderAttributeModel } from "../model/model";
+import { EncounterModel, ProviderAttributeModel } from "../model/model";
 export declare function getCacheData(parse: boolean, key: string): any;
 export declare function setCacheData(key: string, value: string): void;
 export declare function deleteCacheData(key: string): void;
@@ -25,6 +25,29 @@ export declare function compare(a: number | string, b: number | string, isAsc: b
 * @return {string} - Speciality
 */
 export declare function getSpecialization(attr?: ProviderAttributeModel[]): string;
+/**
+ * Checks whether the provider is a NAMCO doctor using the provider name
+ * heuristic and their specialization attribute's "Namco" prefix.
+* @param {{ person?: { display?: string }, attributes?: ProviderAttributeModel[] }} provider - Provider profile
+* @return {boolean}
+*/
+export declare function isNamcoDoctor(provider?: {
+    person?: {
+        display?: string;
+    };
+    attributes?: ProviderAttributeModel[];
+}): boolean;
+/**
+Resolve which encounter's prescription the currently logged-in doctor should see in View
+Prescription — their own, and only their own: a normal doctor sees their "Visit Note"
+encounter, a NAMCO doctor sees their own "Specialist Visit Note" encounter. Deliberately
+login-dependent so the two doctors' contributions are never shown blended together.
+* @param {{ encounters?: EncounterModel[] }} visit - The current visit
+* @return {string[]} - Encounter uuids this visit's prescription should be read from
+*/
+export declare function getPrescriptionSourceEncounterUuids(visit?: {
+    encounters?: EncounterModel[];
+}): string[];
 /**
 * Retrieve the appropriate language value from an element.
 * @param {any} element - An object containing `lang` and `name`.

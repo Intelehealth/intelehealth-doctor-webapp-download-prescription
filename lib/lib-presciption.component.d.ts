@@ -113,6 +113,7 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
         value: any;
     };
     brandName: boolean;
+    isNamcoDoctorLoggedIn: boolean;
     constructor(data: any, dialogRef: MatDialogRef<LibPresciptionComponent>, appConfigService: AppConfigService, translateService: TranslateService, visitService: VisitService, diagnosisService: DiagnosisService, profileService: ProfileService, envService: EnvConfigService);
     ngOnInit(): void;
     /**
@@ -121,6 +122,13 @@ export declare class LibPresciptionComponent implements OnInit, OnDestroy {
     * @returns {void}
     */
     getVisit(uuid: string): void;
+    /**
+    * Build the consulted-doctor display object from a provider record, for the referring doctor's
+    * own "Visit Note" encounter (which never gets a "Doctor details" obs snapshot — only Visit
+    * @param {any} provider - Provider record (encounterProviders[0].provider)
+    * @return {any} - Doctor details object shaped like the "Doctor details" obs snapshot
+    */
+    buildConsultedDoctorFromProvider(provider: any): any;
     /**
      * Get chief complaints and patient visit reason/summary
      * @param {EncounterModel[]} encounters - Array of encounters

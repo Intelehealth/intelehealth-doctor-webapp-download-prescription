@@ -33,6 +33,8 @@ export declare const visitTypes: {
     FAMILY_HISTORY: string;
     FOLLOW_UP: string;
     NEW: string;
+    REFERRAL: string;
+    SPECIALIST_VISIT_NOTE: string;
 };
 export declare const doctorDetails: {
     TELEPHONE_NUMBER: string;
